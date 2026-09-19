@@ -11,7 +11,7 @@
    Bump CACHE when the file list changes, so stale entries are purged.
 --------------------------------------------------------------------------- */
 
-const CACHE = 'fullscreen-timer-v2';
+const CACHE = 'fullscreen-timer-v3';
 
 const ASSETS = [
   './',
@@ -38,7 +38,8 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches
       .open(CACHE)
-      .then((cache) => cache.addAll(ASSETS))
+      // cache: 'reload' so a fresh install never precaches a stale HTTP copy.
+      .then((cache) => cache.addAll(ASSETS.map((url) => new Request(url, { cache: 'reload' }))))
       .then(() => self.skipWaiting()),
   );
 });
@@ -58,8 +59,15 @@ self.addEventListener('fetch', (event) => {
   const { request } = event;
   if (request.method !== 'GET' || new URL(request.url).origin !== self.location.origin) return;
 
+  // GitHub Pages serves these with a ten minute max-age, so a plain fetch can
+  // still be answered from the HTTP cache with yesterday's build. Revalidating
+  // makes the server the authority; unchanged files come back as a cheap 304.
+  // Fetching by URL rather than passing the Request avoids the "cannot
+  // construct a Request whose mode is navigate" trap.
+  const fresh = fetch(request.url, { cache: 'no-cache', credentials: 'same-origin' });
+
   event.respondWith(
-    fetch(request)
+    fresh
       .then((response) => {
         if (response && response.ok) {
           const copy = response.clone();
