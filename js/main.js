@@ -28,9 +28,11 @@ import { describeDuration, formatClock, formatTime, joinDuration } from './forma
 
 const IDLE_MS = 3_000;
 
+/** The title as authored in the HTML, restored whenever the clock is idle. */
+const DOCUMENT_TITLE = document.title;
+
 let settings = store.load();
 let zeroReached = false;
-let lastRendered = '';
 
 const clock = createClock(onTick);
 const digits = createDigits({ svg: el.digits, text: el.digitsText });
@@ -93,10 +95,11 @@ function onTick(elapsedMs, running) {
   });
   ui.setBlank(blank);
 
-  if (text !== lastRendered) {
-    lastRendered = text;
-    document.title = running ? `${text} · Fullscreen Timer` : 'Fullscreen Timer';
-  }
+  // Prefix the tab title while running, but put the real one back when idle —
+  // overwriting it with a short label would throw away the page title that
+  // search results and bookmarks use.
+  const title = running ? `${text} · Fullscreen Timer` : DOCUMENT_TITLE;
+  if (title !== document.title) document.title = title;
 }
 
 function handleZero() {

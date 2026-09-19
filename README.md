@@ -108,6 +108,27 @@ Two decisions carry the whole thing:
 - Browsers require one interaction on the page before audio can play, so the alarm is armed
   by your first click or keypress.
 
+## Search visibility
+
+The page carries a descriptive title and meta description, a canonical URL, Open Graph and
+Twitter card tags, `WebApplication` and `FAQPage` JSON-LD, a sitemap, and roughly 700 words
+of real content below the timer. The timer itself still occupies exactly one viewport and
+the article is hidden entirely in fullscreen.
+
+Two things are worth knowing:
+
+- **`robots.txt` only counts at a domain root.** Crawlers read
+  `nikil-srinivasan.github.io/robots.txt`, which belongs to the account's own
+  `nikil-srinivasan.github.io` repository, not to this one. The copy here does nothing today
+  and becomes correct the moment a custom domain is attached. Submit the sitemap directly in
+  Search Console instead.
+- **The tab title is restored when the clock is idle.** While the timer runs the title is
+  prefixed with the time; it must fall back to the full authored title, because search results
+  and bookmarks use whatever the rendered DOM holds.
+
+Submitting the site to Google needs a Google account, so it cannot be scripted from here —
+see `SEO.md` for the steps.
+
 ## Licence
 
 MIT — see [LICENSE](LICENSE).
