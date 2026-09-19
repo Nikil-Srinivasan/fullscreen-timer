@@ -20,8 +20,8 @@ give them — a 320px phone or an 8K wall.
 - **Hide the timer** and let it flash the time every 1 or 5 minutes — you glance instead
   of stare. A tap peeks without disturbing the run.
 - **Dark / light / auto** theme
-- **Editable length** — hour/minute/second fields, preset chips, or arrow keys, adjustable
-  live while the timer runs
+- **Editable length** — hour/minute/second fields, preset chips, arrow keys, or the scroll
+  wheel over the digits, all adjustable live while the timer runs
 - **Warning colours** — amber, then red, at thresholds you choose
 - **Alarm** at zero, synthesised in the browser (no audio files), with optional repeat
 - **Overtime** — keeps counting past zero with a minus sign
@@ -44,6 +44,7 @@ give them — a 320px phone or an 8K wall.
 | <kbd>←</kbd> <kbd>→</kbd> | Countdown by one minute |
 | <kbd>↓</kbd> <kbd>↑</kbd> | Countdown by ten seconds |
 | <kbd>Shift</kbd> + arrows | Ten times the step |
+| Scroll wheel | Countdown by ten seconds, or a minute with <kbd>Shift</kbd> |
 | <kbd>1</kbd>–<kbd>9</kbd> | Jump to a preset length |
 | <kbd>,</kbd> | Settings |
 | <kbd>?</kbd> | Shortcuts |

@@ -331,6 +331,34 @@ el.stageHit.addEventListener('click', () => {
   actions.toggleStart();
 });
 
+/* Scrolling over the timer nudges it, the same as the up and down arrows.
+   Deltas are accumulated so a trackpad's stream of tiny events steps once
+   rather than a hundred times, and normalised because browsers report wheel
+   distance in pixels, lines or pages depending on the device. */
+const WHEEL_STEP = 50;
+let wheelAccumulated = 0;
+
+el.stage.addEventListener(
+  'wheel',
+  (event) => {
+    if (settings.mode !== 'countdown') return;
+    event.preventDefault();
+
+    // Holding shift turns a vertical wheel into a horizontal one.
+    const raw = event.deltaY || event.deltaX;
+    const pixels = event.deltaMode === 1 ? raw * 16 : event.deltaMode === 2 ? raw * 100 : raw;
+
+    wheelAccumulated += pixels;
+    const steps = Math.trunc(wheelAccumulated / WHEEL_STEP);
+    if (!steps) return;
+    wheelAccumulated -= steps * WHEEL_STEP;
+
+    // Scrolling up adds time, matching ArrowUp.
+    actions.adjust(-steps * (event.shiftKey ? 60_000 : 10_000));
+  },
+  { passive: false },
+);
+
 document.querySelectorAll('[data-mode]').forEach((node) => {
   node.addEventListener('click', () => actions.setMode(node.dataset.mode));
 });
