@@ -1,0 +1,486 @@
+/* ---------------------------------------------------------------------------
+   components.css — buttons, badges, the settings sheet, the help overlay.
+   Sizes are in rem, which grows with the viewport (see tokens.css), so touch
+   targets stay comfortable on a phone and proportionate on a large display.
+--------------------------------------------------------------------------- */
+
+/* --- Badges ------------------------------------------------------------- */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.badge--muted {
+  background: transparent;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+/* --- Buttons ------------------------------------------------------------ */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  min-height: 2.75rem; /* stays >= 44px at the root font-size floor */
+  padding: 0.55rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  transition: background var(--quick) ease, border-color var(--quick) ease,
+    color var(--quick) ease, transform var(--quick) ease;
+}
+
+.btn:hover {
+  background: var(--surface-2);
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btn:focus-visible {
+  outline: 0.15rem solid var(--accent);
+  outline-offset: 0.15rem;
+}
+
+.btn--primary {
+  min-width: 8rem;
+  border-color: transparent;
+  background: var(--accent);
+  color: var(--accent-contrast);
+}
+
+.btn--primary:hover {
+  background: var(--accent);
+  filter: brightness(1.08);
+}
+
+.btn--ghost {
+  border-color: transparent;
+  background: transparent;
+  color: var(--text-muted);
+}
+
+.btn--ghost:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.btn--wide {
+  flex: 1 1 12rem;
+}
+
+.btn[aria-pressed="true"] {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.btn__label {
+  white-space: nowrap;
+}
+
+.icon {
+  width: 1.15rem;
+  height: 1.15rem;
+  fill: currentColor;
+  flex: none;
+}
+
+.iconbtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 0;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.iconbtn:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+/* On narrow screens the labels go, the icons stay. */
+@media (max-width: 34rem) {
+  .controls .btn__label {
+    display: none;
+  }
+
+  .controls .btn {
+    padding: 0.55rem 0.75rem;
+  }
+
+  .controls .btn--primary {
+    min-width: 5rem;
+  }
+
+  .controls .btn--primary .btn__label {
+    display: inline;
+  }
+}
+
+/* --- Sheet (settings + help) -------------------------------------------- */
+
+.sheet {
+  position: absolute;
+  right: calc(1rem + env(safe-area-inset-right));
+  bottom: calc(4.75rem + env(safe-area-inset-bottom));
+  z-index: 20;
+  width: min(26rem, calc(100% - 2rem));
+  max-height: min(80vh, 44rem);
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--bg-elev);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.sheet--center {
+  right: 50%;
+  bottom: 50%;
+  transform: translate(50%, 50%);
+}
+
+.sheet[hidden] {
+  display: none;
+}
+
+.sheet__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gap);
+  padding: 0.85rem 0.85rem 0.6rem 1.1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.sheet__title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.sheet__body {
+  padding: 0.5rem 1.1rem 1.1rem;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* On a phone the sheet becomes a bottom sheet across the full width. */
+@media (max-width: 34rem) {
+  .sheet,
+  .sheet--center {
+    right: 0;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    max-height: 85dvh;
+    transform: none;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    border-bottom: 0;
+  }
+}
+
+/* --- Groups and fields -------------------------------------------------- */
+
+.group {
+  padding: 0.9rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.group:last-child {
+  border-bottom: 0;
+  padding-bottom: 0.2rem;
+}
+
+.group__title {
+  margin: 0 0 0.55rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.group__hint {
+  margin: -0.3rem 0 0.6rem;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+.group[hidden] {
+  display: none;
+}
+
+.segmented {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+}
+
+.segmented__opt {
+  flex: 1 1 0;
+  min-height: 2.3rem;
+  padding: 0.45rem 0.5rem;
+  border: 0;
+  border-radius: calc(var(--radius) - 0.25rem);
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--quick) ease, color var(--quick) ease;
+}
+
+.segmented__opt[aria-checked="true"] {
+  background: var(--bg-elev);
+  color: var(--text);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
+}
+
+.segmented__opt:focus-visible {
+  outline: 0.15rem solid var(--accent);
+  outline-offset: -0.15rem;
+}
+
+.timefields {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.field--row {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 0.6rem;
+}
+
+.field__label {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.field__unit {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.input {
+  width: 100%;
+  min-height: 2.6rem;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.input--sm {
+  width: 5.5rem;
+  margin-left: auto;
+  text-align: center;
+}
+
+.input:focus-visible {
+  outline: 0.15rem solid var(--accent);
+  outline-offset: 0;
+  border-color: var(--accent);
+}
+
+.range {
+  flex: 1 1 auto;
+  accent-color: var(--accent);
+  min-height: 1.5rem;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.6rem;
+}
+
+.chip {
+  min-height: 2.2rem;
+  padding: 0.4rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.chip:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.chip[aria-pressed="true"] {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.check {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.4rem 0;
+  font-size: 0.88rem;
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+.check input {
+  width: 1.1rem;
+  height: 1.1rem;
+  margin: 0.1rem 0 0;
+  accent-color: var(--accent);
+  flex: none;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+/* --- Help --------------------------------------------------------------- */
+
+.keys {
+  margin: 0;
+  display: grid;
+  gap: 0.15rem;
+}
+
+.keys__row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.3rem 0;
+  border-bottom: 1px dashed var(--border);
+}
+
+.keys__row:last-child {
+  border-bottom: 0;
+}
+
+.keys dt {
+  display: flex;
+  gap: 0.25rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.keys dd {
+  margin: 0;
+  font-size: 0.88rem;
+  text-align: right;
+}
+
+kbd {
+  display: inline-block;
+  min-width: 1.6rem;
+  padding: 0.15rem 0.4rem;
+  border: 1px solid var(--border);
+  border-bottom-width: 2px;
+  border-radius: 0.35rem;
+  background: var(--surface-2);
+  color: var(--text);
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-size: 0.75rem;
+  text-align: center;
+}
+
+.help__note {
+  margin: 0.9rem 0 0;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+/* --- Toast and scrim ---------------------------------------------------- */
+
+.toast {
+  position: absolute;
+  left: 50%;
+  bottom: calc(4.75rem + env(safe-area-inset-bottom));
+  z-index: 30;
+  transform: translateX(-50%);
+  padding: 0.55rem 0.95rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--bg-elev);
+  color: var(--text);
+  font-size: 0.85rem;
+  font-weight: 600;
+  box-shadow: var(--shadow);
+  animation: toast-in var(--fade) ease;
+}
+
+.toast[hidden] {
+  display: none;
+}
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translate(-50%, 0.5rem); }
+  to   { opacity: 1; transform: translate(-50%, 0); }
+}
+
+.scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  background: transparent;
+}
+
+.scrim[hidden] {
+  display: none;
+}

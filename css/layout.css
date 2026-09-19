@@ -1,0 +1,241 @@
+/* ---------------------------------------------------------------------------
+   layout.css — the app shell.
+
+   The one rule that matters: nothing on the path to the digits may carry a
+   max-width, max-height or a clamp() upper bound. The digits are an SVG that
+   scales to whatever box it is given, so the box is simply "the viewport".
+--------------------------------------------------------------------------- */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* Components below set display, which would otherwise beat the UA rule for
+   [hidden] and leave empty pills and panels on screen. */
+[hidden] {
+  display: none !important;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+}
+
+body {
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+  overscroll-behavior: none;
+  touch-action: manipulation;
+}
+
+.app {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  /* minmax(0, 1fr), not the implicit "auto": a long badge would otherwise widen
+     the column past the viewport and push the controls off the right edge. */
+  grid-template-columns: minmax(0, 1fr);
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  padding:
+    calc(0.75rem + env(safe-area-inset-top))
+    calc(1rem + env(safe-area-inset-right))
+    calc(0.75rem + env(safe-area-inset-bottom))
+    calc(1rem + env(safe-area-inset-left));
+  background: var(--bg);
+  transition: background var(--fade) ease;
+}
+
+/* --- Progress ring ------------------------------------------------------ */
+
+.ring {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 1;
+  transition: opacity var(--fade) ease;
+}
+
+.ring__track {
+  fill: none;
+  stroke: var(--ring-track);
+}
+
+.ring__progress {
+  fill: none;
+  stroke: var(--ring-progress);
+  stroke-linecap: round;
+  transition: stroke var(--fade) ease;
+}
+
+.app[data-ring="off"] .ring,
+.app[data-blank="true"] .ring {
+  opacity: 0;
+}
+
+/* --- Top bar ------------------------------------------------------------ */
+
+.topbar {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gap);
+  min-width: 0;
+  min-height: 2rem;
+  transition: opacity var(--fade) ease;
+}
+
+.topbar__side {
+  display: flex;
+  align-items: center;
+  gap: var(--gap);
+  min-width: 0;
+}
+
+.topbar__side--end {
+  justify-content: flex-end;
+}
+
+/* --- Stage -------------------------------------------------------------- */
+
+.stage {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  min-height: 0; /* lets the 1fr row actually shrink, instead of overflowing */
+  min-width: 0;
+}
+
+.stage__hit {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.stage__hit:focus-visible {
+  outline: 0.15rem solid var(--accent);
+  outline-offset: -0.4rem;
+  border-radius: var(--radius-lg);
+}
+
+.digits {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  transition: opacity var(--fade) ease;
+}
+
+.digits__text {
+  fill: var(--digit);
+  font-family: ui-monospace, "SF Mono", "Cascadia Mono", "Segoe UI Mono", "Roboto Mono",
+    Menlo, Consolas, "Liberation Mono", monospace;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+  font-size: 100px; /* user units only — the viewBox does the real scaling */
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  transition: fill var(--fade) ease;
+}
+
+.app[data-running="false"] .digits__text {
+  opacity: 0.86;
+}
+
+/* Hidden mode: the screen goes blank between reveals. */
+.app[data-blank="true"] .digits {
+  opacity: 0;
+}
+
+/* A dim breathing dot, so a blank screen still looks alive. */
+.pulse {
+  position: absolute;
+  right: 0.25rem;
+  bottom: 0.25rem;
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  background: var(--text-muted);
+  opacity: 0.35;
+  animation: breathe 2.6s ease-in-out infinite;
+}
+
+@keyframes breathe {
+  0%, 100% { opacity: 0.12; }
+  50%      { opacity: 0.45; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pulse { animation: none; }
+}
+
+/* Visually hidden, but announced by screen readers. */
+.live {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* --- Controls ----------------------------------------------------------- */
+
+.controls {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gap);
+  min-width: 0;
+  padding-top: 0.6rem;
+  transition: opacity var(--fade) ease;
+}
+
+/* Idle in fullscreen: chrome fades away, layout stays put so nothing jumps. */
+.app[data-idle="true"] .controls,
+.app[data-idle="true"] .topbar {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* --- Fullscreen --------------------------------------------------------- */
+
+:root:fullscreen,
+:root:-webkit-full-screen {
+  background: var(--bg);
+}
+
+/* iOS Safari has no Fullscreen API for ordinary elements — fake it. */
+html.pseudo-fs,
+html.pseudo-fs body {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}

@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="auto">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Fullscreen Timer</title>
+<meta name="description" content="A fullscreen countdown and stopwatch timer that scales to fill any screen, with no maximum size.">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#0a0c10" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f7f8fa" media="(prefers-color-scheme: light)">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/layout.css">
+<link rel="stylesheet" href="css/components.css">
+</head>
+<body>
+
+<div class="app" id="app">
+
+  <!-- Progress ring: traces the perimeter of the viewport, so it reads the same at any aspect ratio -->
+  <svg class="ring" id="ring" aria-hidden="true" focusable="false">
+    <path class="ring__track" id="ring-track"></path>
+    <path class="ring__progress" id="ring-progress"></path>
+  </svg>
+
+  <header class="topbar" id="topbar">
+    <div class="topbar__side">
+      <span class="badge" id="mode-badge">Countdown</span>
+      <span class="badge badge--muted" id="hide-badge" hidden>Hidden</span>
+    </div>
+    <div class="topbar__side topbar__side--end">
+      <span class="badge badge--muted" id="clock-badge" title="Time of day" hidden></span>
+    </div>
+  </header>
+
+  <main class="stage" id="stage">
+    <button class="stage__hit" id="stage-hit" type="button" aria-label="Start or pause the timer"></button>
+    <svg class="digits" id="digits" viewBox="0 0 400 100" preserveAspectRatio="xMidYMid meet"
+         role="img" aria-labelledby="digits-label">
+      <title id="digits-label">Timer</title>
+      <text class="digits__text" id="digits-text" x="0" y="0"
+            text-anchor="middle" dominant-baseline="central">00:00</text>
+    </svg>
+    <div class="pulse" id="pulse" aria-hidden="true" hidden></div>
+    <p class="live" id="live" role="status" aria-live="polite"></p>
+  </main>
+
+  <nav class="controls" id="controls" aria-label="Timer controls">
+    <button class="btn btn--primary" id="btn-start" type="button" title="Start or pause (Space)">
+      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path id="start-icon-path" d="M8 5v14l11-7z"/></svg>
+      <span class="btn__label" id="start-label">Start</span>
+    </button>
+
+    <button class="btn" id="btn-reset" type="button" title="Reset (R)">
+      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5V2L7 6l5 4V7a5 5 0 1 1-5 5H5a7 7 0 1 0 7-7z"/></svg>
+      <span class="btn__label">Reset</span>
+    </button>
+
+    <button class="btn" id="btn-mode" type="button" title="Switch countdown / stopwatch (S)">
+      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7h9V4l5 4.5L16 13v-3H7zM17 17H8v3l-5-4.5L8 11v3h9z"/></svg>
+      <span class="btn__label" id="mode-label">Stopwatch</span>
+    </button>
+
+    <button class="btn" id="btn-hide" type="button" title="Hide the timer, reveal periodically (H)">
+      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path id="hide-icon-path" d="M12 5c5 0 9 4.5 9 7s-4 7-9 7-9-4.5-9-7 4-7 9-7zm0 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8z"/></svg>
+      <span class="btn__label" id="hide-label">Visible</span>
+    </button>
+
+    <button class="btn" id="btn-theme" type="button" title="Theme: auto, light, dark (T)">
+      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path id="theme-icon-path" d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z"/></svg>
+      <span class="btn__label" id="theme-label">Auto</span>
+    </button>
+
+    <button class="btn" id="btn-sound" type="button" title="Mute or unmute the alarm (M)">
+      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path id="sound-icon-path" d="M4 9v6h4l5 4V5L8 9z"/><path id="sound-icon-wave" d="M16.5 12a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4z"/></svg>
+      <span class="btn__label" id="sound-label">Sound</span>
+    </button>
+
+    <button class="btn" id="btn-fullscreen" type="button" title="Enter or exit fullscreen (F)">
+      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path id="fs-icon-path" d="M4 9V4h5v2H6v3zm11-5h5v5h-2V6h-3zM6 15v3h3v2H4v-5zm12 0h2v5h-5v-2h3z"/></svg>
+      <span class="btn__label" id="fs-label">Fullscreen</span>
+    </button>
+
+    <button class="btn" id="btn-settings" type="button" title="Settings (,)" aria-haspopup="dialog">
+      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zm8.8 2A8.9 8.9 0 0 0 20 8.1l1.6-2.2-1.5-1.5L17.9 6a8.9 8.9 0 0 0-1.9-.8L15.6 2.5h-2.1L13 5.2a8.9 8.9 0 0 0-1.9.8L8.9 4.4 7.4 5.9 9 8.1a8.9 8.9 0 0 0-.8 1.9l-2.7.4v2.1l2.7.4c.2.7.5 1.3.8 1.9l-1.6 2.2 1.5 1.5 2.2-1.6c.6.4 1.2.6 1.9.8l.4 2.7h2.1l.4-2.7c.7-.2 1.3-.5 1.9-.8l2.2 1.6 1.5-1.5-1.6-2.2c.4-.6.6-1.2.8-1.9l2.7-.4v-2.1z"/></svg>
+      <span class="btn__label">Settings</span>
+    </button>
+
+    <button class="btn btn--ghost" id="btn-help" type="button" title="Keyboard shortcuts (?)" aria-haspopup="dialog">
+      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm1 15h-2v-2h2zm1.6-6.1-.9.9c-.7.7-1.1 1.3-1.1 2.7h-2v-.5c0-1 .4-1.9 1.1-2.6l1.3-1.3A2 2 0 0 0 10 8.5H8a4 4 0 0 1 8 0 3.2 3.2 0 0 1-1.4 2.4z"/></svg>
+      <span class="btn__label">Help</span>
+    </button>
+  </nav>
+
+  <div class="sheet" id="settings" role="dialog" aria-modal="false" aria-labelledby="settings-title" hidden>
+    <div class="sheet__head">
+      <h2 class="sheet__title" id="settings-title">Settings</h2>
+      <button class="iconbtn" id="settings-close" type="button" aria-label="Close settings">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M18.3 5.7 12 12l6.3 6.3-1.4 1.4L10.6 13.4 4.3 19.7 2.9 18.3 9.2 12 2.9 5.7 4.3 4.3l6.3 6.3 6.3-6.3z"/></svg>
+      </button>
+    </div>
+
+    <div class="sheet__body">
+
+      <section class="group">
+        <h3 class="group__title">Mode</h3>
+        <div class="segmented" role="radiogroup" aria-label="Timer mode">
+          <button class="segmented__opt" type="button" role="radio" data-mode="countdown" aria-checked="true">Countdown</button>
+          <button class="segmented__opt" type="button" role="radio" data-mode="stopwatch" aria-checked="false">Stopwatch</button>
+        </div>
+      </section>
+
+      <section class="group" id="group-duration">
+        <h3 class="group__title">Countdown length</h3>
+        <div class="timefields">
+          <label class="field"><span class="field__label">Hours</span>
+            <input class="input" id="in-hours" type="number" min="0" max="99" step="1" inputmode="numeric" value="0"></label>
+          <label class="field"><span class="field__label">Minutes</span>
+            <input class="input" id="in-minutes" type="number" min="0" max="59" step="1" inputmode="numeric" value="5"></label>
+          <label class="field"><span class="field__label">Seconds</span>
+            <input class="input" id="in-seconds" type="number" min="0" max="59" step="1" inputmode="numeric" value="0"></label>
+        </div>
+        <div class="chips" id="presets" aria-label="Preset lengths"></div>
+      </section>
+
+      <section class="group">
+        <h3 class="group__title">Hide the timer</h3>
+        <p class="group__hint">Blank the screen and flash the time at a fixed interval, so you glance instead of stare.</p>
+        <div class="segmented" role="radiogroup" aria-label="Hide mode">
+          <button class="segmented__opt" type="button" role="radio" data-hide="off" aria-checked="true">Off</button>
+          <button class="segmented__opt" type="button" role="radio" data-hide="1" aria-checked="false">Every 1 min</button>
+          <button class="segmented__opt" type="button" role="radio" data-hide="5" aria-checked="false">Every 5 min</button>
+        </div>
+        <label class="field field--row">
+          <span class="field__label">Show for <b id="reveal-value">5</b> s</span>
+          <input class="range" id="in-reveal" type="range" min="1" max="30" step="1" value="5">
+        </label>
+      </section>
+
+      <section class="group" id="group-warnings">
+        <h3 class="group__title">Warning colours</h3>
+        <label class="field field--row">
+          <span class="field__label">Amber under</span>
+          <input class="input input--sm" id="in-warn" type="number" min="0" max="3600" step="5" inputmode="numeric" value="120">
+          <span class="field__unit">s</span>
+        </label>
+        <label class="field field--row">
+          <span class="field__label">Red under</span>
+          <input class="input input--sm" id="in-danger" type="number" min="0" max="3600" step="5" inputmode="numeric" value="30">
+          <span class="field__unit">s</span>
+        </label>
+      </section>
+
+      <section class="group">
+        <h3 class="group__title">Options</h3>
+        <label class="check"><input type="checkbox" id="opt-sound"><span>Alarm sound when the countdown hits zero</span></label>
+        <label class="check"><input type="checkbox" id="opt-repeat"><span>Keep beeping until I stop it</span></label>
+        <label class="check"><input type="checkbox" id="opt-ring"><span>Show the progress ring</span></label>
+        <label class="check"><input type="checkbox" id="opt-overtime"><span>Count up past zero (overtime)</span></label>
+        <label class="check"><input type="checkbox" id="opt-wake"><span>Keep the screen awake while running</span></label>
+        <label class="check"><input type="checkbox" id="opt-clock"><span>Show the time of day</span></label>
+      </section>
+
+      <section class="group">
+        <h3 class="group__title">Theme</h3>
+        <div class="segmented" role="radiogroup" aria-label="Theme">
+          <button class="segmented__opt" type="button" role="radio" data-theme-opt="auto" aria-checked="true">Auto</button>
+          <button class="segmented__opt" type="button" role="radio" data-theme-opt="light" aria-checked="false">Light</button>
+          <button class="segmented__opt" type="button" role="radio" data-theme-opt="dark" aria-checked="false">Dark</button>
+        </div>
+      </section>
+
+      <section class="group">
+        <div class="row">
+          <button class="btn btn--wide" id="btn-share" type="button">Copy shareable link</button>
+          <button class="btn btn--wide btn--ghost" id="btn-defaults" type="button">Restore defaults</button>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <div class="sheet sheet--center" id="help" role="dialog" aria-modal="false" aria-labelledby="help-title" hidden>
+    <div class="sheet__head">
+      <h2 class="sheet__title" id="help-title">Keyboard shortcuts</h2>
+      <button class="iconbtn" id="help-close" type="button" aria-label="Close help">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M18.3 5.7 12 12l6.3 6.3-1.4 1.4L10.6 13.4 4.3 19.7 2.9 18.3 9.2 12 2.9 5.7 4.3 4.3l6.3 6.3 6.3-6.3z"/></svg>
+      </button>
+    </div>
+    <div class="sheet__body">
+      <dl class="keys">
+        <div class="keys__row"><dt><kbd>Space</kbd></dt><dd>Start / pause</dd></div>
+        <div class="keys__row"><dt><kbd>R</kbd></dt><dd>Reset</dd></div>
+        <div class="keys__row"><dt><kbd>S</kbd></dt><dd>Switch countdown / stopwatch</dd></div>
+        <div class="keys__row"><dt><kbd>F</kbd></dt><dd>Fullscreen on / off</dd></div>
+        <div class="keys__row"><dt><kbd>H</kbd></dt><dd>Cycle hide mode: off, 1 min, 5 min</dd></div>
+        <div class="keys__row"><dt><kbd>T</kbd></dt><dd>Theme: auto, light, dark</dd></div>
+        <div class="keys__row"><dt><kbd>M</kbd></dt><dd>Mute / unmute the alarm</dd></div>
+        <div class="keys__row"><dt><kbd>&larr;</kbd> <kbd>&rarr;</kbd></dt><dd>Countdown by one minute</dd></div>
+        <div class="keys__row"><dt><kbd>&darr;</kbd> <kbd>&uarr;</kbd></dt><dd>Countdown by ten seconds</dd></div>
+        <div class="keys__row"><dt><kbd>Shift</kbd> and arrows</dt><dd>Ten times the step</dd></div>
+        <div class="keys__row"><dt><kbd>1</kbd> &hellip; <kbd>9</kbd></dt><dd>Jump to a preset length</dd></div>
+        <div class="keys__row"><dt><kbd>,</kbd></dt><dd>Open settings</dd></div>
+        <div class="keys__row"><dt><kbd>?</kbd></dt><dd>This list</dd></div>
+        <div class="keys__row"><dt><kbd>Esc</kbd></dt><dd>Close panels, or leave fullscreen</dd></div>
+      </dl>
+      <p class="help__note">Tap or click the big digits to start and pause. While the timer is hidden, a tap
+        peeks at the time without changing anything.</p>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+  <div class="scrim" id="scrim" hidden></div>
+</div>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

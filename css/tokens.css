@@ -1,0 +1,123 @@
+/* ---------------------------------------------------------------------------
+   tokens.css — colour, type and spacing scale.
+
+   Light is the base; dark is applied when the system asks for it (unless the
+   user pinned light) and whenever data-theme="dark" is set explicitly.
+
+   Nothing in here caps a size. The root font size has a floor and then grows
+   with the viewport forever, which is what lets the UI stay proportionate on a
+   wall display instead of shrinking into the middle of it.
+--------------------------------------------------------------------------- */
+
+:root {
+  /* Surfaces and text */
+  --bg: #f4f6f9;
+  --bg-elev: #ffffff;
+  --surface: #ffffff;
+  --surface-2: #eef1f6;
+  --border: #d8dee8;
+  --text: #0f141c;
+  --text-muted: #5a6472;
+
+  /* Accents */
+  --accent: #2563eb;
+  --accent-contrast: #ffffff;
+  --warn: #b45309;
+  --danger: #d32338;
+  --ok: #128a5a;
+
+  /* The digits, and the progress ring */
+  --digit: var(--text);
+  --ring-track: rgba(15, 20, 28, 0.10);
+  --ring-progress: var(--accent);
+
+  --shadow: 0 1.2rem 3rem rgba(15, 20, 28, 0.16);
+  --scrim: rgba(15, 20, 28, 0.32);
+
+  /* Rhythm */
+  --gap: 0.6rem;
+  --pad: 1rem;
+  --radius: 0.7rem;
+  --radius-lg: 1.1rem;
+
+  /* Motion */
+  --fade: 260ms;
+  --quick: 140ms;
+
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0a0c10;
+    --bg-elev: #12161d;
+    --surface: #151a22;
+    --surface-2: #1d232d;
+    --border: #2a323f;
+    --text: #eef2f8;
+    --text-muted: #9aa5b5;
+
+    --accent: #5b9cff;
+    --accent-contrast: #06101f;
+    --warn: #f5b13d;
+    --danger: #ff5d73;
+    --ok: #3ddc97;
+
+    --digit: var(--text);
+    --ring-track: rgba(238, 242, 248, 0.10);
+    --ring-progress: var(--accent);
+
+    --shadow: 0 1.2rem 3rem rgba(0, 0, 0, 0.55);
+    --scrim: rgba(0, 0, 0, 0.55);
+
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #0a0c10;
+  --bg-elev: #12161d;
+  --surface: #151a22;
+  --surface-2: #1d232d;
+  --border: #2a323f;
+  --text: #eef2f8;
+  --text-muted: #9aa5b5;
+
+  --accent: #5b9cff;
+  --accent-contrast: #06101f;
+  --warn: #f5b13d;
+  --danger: #ff5d73;
+  --ok: #3ddc97;
+
+  --digit: var(--text);
+  --ring-track: rgba(238, 242, 248, 0.10);
+  --ring-progress: var(--accent);
+
+  --shadow: 0 1.2rem 3rem rgba(0, 0, 0, 0.55);
+  --scrim: rgba(0, 0, 0, 0.55);
+
+  color-scheme: dark;
+}
+
+/* Tone of the digits and ring, driven by how much time is left. */
+.app[data-tone="warn"] {
+  --digit: var(--warn);
+  --ring-progress: var(--warn);
+}
+
+.app[data-tone="danger"] {
+  --digit: var(--danger);
+  --ring-progress: var(--danger);
+}
+
+/* A floor, then unbounded growth: 15px at phone size, ~20px at 4K, more beyond. */
+html {
+  font-size: calc(15px + 0.25vmin);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --fade: 1ms;
+    --quick: 1ms;
+  }
+}
