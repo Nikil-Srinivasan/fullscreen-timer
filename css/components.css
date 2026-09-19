@@ -484,3 +484,90 @@ kbd {
 .scrim[hidden] {
   display: none;
 }
+
+/* --- The article below the timer ---------------------------------------- */
+
+.content {
+  /* A measure cap is right here and nowhere else: prose is unreadable at
+     3000px wide, while the timer above must never be capped at all. */
+  max-width: 46rem;
+  margin: 0 auto;
+  padding:
+    3.5rem
+    calc(1.5rem + env(safe-area-inset-right))
+    4rem
+    calc(1.5rem + env(safe-area-inset-left));
+  border-top: 1px solid var(--border);
+  font-size: 1rem;
+  line-height: 1.7;
+  color: var(--text);
+}
+
+.content h2 {
+  margin: 2.5rem 0 0.75rem;
+  font-size: 1.4rem;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+
+.content h2:first-of-type {
+  margin-top: 0;
+}
+
+.content h3 {
+  margin: 1.75rem 0 0.4rem;
+  font-size: 1.02rem;
+  line-height: 1.35;
+}
+
+.content p {
+  margin: 0 0 1rem;
+  color: var(--text-muted);
+}
+
+.content li {
+  margin-bottom: 0.5rem;
+  color: var(--text-muted);
+}
+
+.content ul {
+  margin: 0 0 1rem;
+  padding-left: 1.2rem;
+}
+
+.content strong,
+.content em {
+  color: var(--text);
+}
+
+.content a {
+  color: var(--accent);
+  text-underline-offset: 0.2em;
+}
+
+.content kbd {
+  font-size: 0.72rem;
+}
+
+.faq {
+  margin-top: 0.5rem;
+  padding: 0.5rem 1.2rem 1.2rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+
+.faq h3:first-child {
+  margin-top: 1rem;
+}
+
+.content__footer {
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.88rem;
+}
+
+.content__footer p {
+  margin: 0 0 0.4rem;
+}

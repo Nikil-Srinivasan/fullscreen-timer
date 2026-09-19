@@ -22,23 +22,34 @@ html,
 body {
   margin: 0;
   padding: 0;
-  height: 100%;
+  /* min-height, not height: the article below the timer has to be able to
+     extend the page. */
+  min-height: 100%;
   background: var(--bg);
   color: var(--text);
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
-  overflow: hidden;
-  overscroll-behavior: none;
+  overflow-x: hidden;
   touch-action: manipulation;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
 }
 
 .app {
   position: relative;
   display: grid;
-  grid-template-rows: auto 1fr auto;
+  grid-template-rows: auto 1fr auto auto;
   /* minmax(0, 1fr), not the implicit "auto": a long badge would otherwise widen
      the column past the viewport and push the controls off the right edge. */
   grid-template-columns: minmax(0, 1fr);
@@ -230,7 +241,49 @@ body {
   pointer-events: none;
 }
 
+/* Wheel events over the timer adjust the countdown, so the page cannot be
+   scrolled from there. This link is how you reach the article below. */
+.scrolldown {
+  position: relative;
+  z-index: 3;
+  justify-self: center;
+  margin-top: 0.35rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: var(--radius);
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-decoration: none;
+  letter-spacing: 0.01em;
+  transition: color var(--quick) ease, opacity var(--fade) ease;
+}
+
+.scrolldown:hover {
+  color: var(--text);
+}
+
+.app[data-idle="true"] .scrolldown {
+  opacity: 0;
+  pointer-events: none;
+}
+
 /* --- Fullscreen --------------------------------------------------------- */
+
+/* In fullscreen the timer is the whole point; the article would only be
+   something to scroll into by accident. */
+:root:fullscreen .content,
+:root:fullscreen .scrolldown,
+:root:-webkit-full-screen .content,
+:root:-webkit-full-screen .scrolldown,
+html.pseudo-fs .content,
+html.pseudo-fs .scrolldown {
+  display: none;
+}
+
+html.pseudo-fs,
+html.pseudo-fs body {
+  overflow: hidden;
+}
 
 :root:fullscreen,
 :root:-webkit-full-screen {

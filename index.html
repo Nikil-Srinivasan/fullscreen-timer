@@ -261,7 +261,152 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
   <div class="scrim" id="scrim" hidden></div>
+
+  <a class="scrolldown" href="#about">About &amp; FAQ <span aria-hidden="true">&darr;</span></a>
 </div>
+
+<article class="content" id="about">
+
+  <h2>A timer you can read from the back of the room</h2>
+  <p>
+    Most web timers cap how large their digits can grow. Open one on a lecture-hall projector or a
+    meeting-room TV and the numbers stop at some fixed size, marooned in the middle of an enormous
+    screen. This one has no maximum: the digits are drawn as vector text fitted to the space they are
+    given, so they fill a 5-inch phone and an 8K wall display equally well. There is nothing to
+    configure for it to happen — open the page on any screen and it is already the right size.
+  </p>
+
+  <h2>Countdown or stopwatch</h2>
+  <p>
+    Set a countdown when you have a fixed slot: a conference talk, a lightning round, an exam, a
+    workshop exercise. Type the length, pick one of the presets, or hold an arrow key. Once it is
+    running you can still add or remove time without stopping the clock — useful when a session
+    overruns and you decide to give it two more minutes. Switch to stopwatch mode when you want to
+    know how long something actually took.
+  </p>
+  <p>
+    When a countdown reaches zero it keeps going, counting up with a minus sign, so you always know
+    how far over you are rather than just that you are over. Before that, the digits turn amber and
+    then red at thresholds you set, so the room gets a warning without anyone having to say anything.
+  </p>
+
+  <h2>Hide the timer and glance instead of stare</h2>
+  <p>
+    A timer you can watch is a timer you <em>will</em> watch. Hidden mode blanks the screen while the
+    clock keeps running and flashes the time for a few seconds each minute, or every five minutes,
+    then blanks again. Speakers stop clock-watching, and the audience is not distracted by digits
+    ticking down throughout the talk. A tap peeks at the time whenever you want, without pausing
+    anything or disturbing the schedule.
+  </p>
+
+  <h2>Built for the room, not the desk</h2>
+  <ul>
+    <li><strong>Fullscreen</strong> with one key, and the controls fade away once you stop moving the mouse.</li>
+    <li><strong>The screen stays awake</strong> while the timer runs, so your laptop does not sleep mid-talk.</li>
+    <li><strong>Dark and light themes</strong>, following your system by default — dark for a darkened room, light for a bright one.</li>
+    <li><strong>It works offline</strong> once loaded, which matters on conference wifi.</li>
+    <li><strong>Shareable links</strong>: the address bar always describes the current timer, so you can send a colleague the exact setup.</li>
+    <li><strong>Keyboard and scroll wheel</strong>: space to start, <kbd>R</kbd> to reset, arrows or the wheel to change the length.</li>
+  </ul>
+
+  <h2>Questions</h2>
+
+  <section class="faq">
+    <h3>Is it free?</h3>
+    <p>Yes. It is free, open source under the MIT licence, has no accounts, no adverts and no tracking.</p>
+
+    <h3>Does it work offline?</h3>
+    <p>
+      Yes. After the first visit the timer is stored in your browser and runs without a connection. You
+      can also install it as an app from your browser menu.
+    </p>
+
+    <h3>Can I use it on a projector or a TV?</h3>
+    <p>
+      That is what it is for. The digits scale to whatever screen you put them on, with no upper limit,
+      so a 4K display shows 4K-sized numbers rather than a small timer in the middle of a large screen.
+    </p>
+
+    <h3>How do I hide the timer and show it every five minutes?</h3>
+    <p>
+      Press <kbd>H</kbd> until it reads &ldquo;5 min&rdquo;, or open Settings and choose it under
+      &ldquo;Hide the timer&rdquo;. The screen goes blank and the time appears for a few seconds at every
+      five-minute mark. You can change how long each flash lasts.
+    </p>
+
+    <h3>Will it stop my screen going to sleep?</h3>
+    <p>
+      Yes, while the timer is running, in browsers that support screen wake locks. Safari does not, so
+      on an iPhone or iPad you may still want to raise your auto-lock time.
+    </p>
+
+    <h3>Does it work on a phone?</h3>
+    <p>
+      Yes, on any modern browser. On iPhone and iPad, fullscreen hides the page controls but not
+      Safari&rsquo;s own toolbars, because Safari does not offer the fullscreen API to ordinary web pages.
+    </p>
+
+    <h3>Can I save a timer I use often?</h3>
+    <p>
+      Bookmark it. The address bar always reflects the current setup, so the bookmark reopens that exact
+      timer, and your settings are remembered between visits anyway.
+    </p>
+  </section>
+
+  <footer class="content__footer">
+    <p>
+      Free and open source &mdash;
+      <a href="https://github.com/Nikil-Srinivasan/fullscreen-timer">source on GitHub</a>.
+      Inspired by <a href="https://github.com/alphakevin/fullscreen-timer">alphakevin/fullscreen-timer</a>.
+    </p>
+    <p><a href="#app">Back to the timer &uarr;</a></p>
+  </footer>
+
+</article>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Is it free?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Yes. It is free, open source under the MIT licence, has no accounts, no adverts and no tracking." }
+    },
+    {
+      "@type": "Question",
+      "name": "Does it work offline?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Yes. After the first visit the timer is stored in your browser and runs without a connection. You can also install it as an app from your browser menu." }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I use it on a projector or a TV?",
+      "acceptedAnswer": { "@type": "Answer", "text": "That is what it is for. The digits scale to whatever screen you put them on, with no upper limit, so a 4K display shows 4K-sized numbers rather than a small timer in the middle of a large screen." }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I hide the timer and show it every five minutes?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Press H until it reads 5 min, or open Settings and choose it under Hide the timer. The screen goes blank and the time appears for a few seconds at every five-minute mark. You can change how long each flash lasts." }
+    },
+    {
+      "@type": "Question",
+      "name": "Will it stop my screen going to sleep?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Yes, while the timer is running, in browsers that support screen wake locks. Safari does not, so on an iPhone or iPad you may still want to raise your auto-lock time." }
+    },
+    {
+      "@type": "Question",
+      "name": "Does it work on a phone?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Yes, on any modern browser. On iPhone and iPad, fullscreen hides the page controls but not Safari's own toolbars, because Safari does not offer the fullscreen API to ordinary web pages." }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I save a timer I use often?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Bookmark it. The address bar always reflects the current setup, so the bookmark reopens that exact timer, and your settings are remembered between visits anyway." }
+    }
+  ]
+}
+</script>
 
 <script type="module" src="js/main.js"></script>
 </body>
