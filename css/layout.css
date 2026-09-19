@@ -194,7 +194,8 @@ body {
   .pulse { animation: none; }
 }
 
-/* Visually hidden, but announced by screen readers. */
+/* Visually hidden, but read by screen readers and crawlers. */
+.sr-only,
 .live {
   position: absolute;
   width: 1px;

@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://nikil-srinivasan.github.io/fullscreen-timer/sitemap.xml
