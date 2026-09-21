@@ -11,14 +11,14 @@
    Bump CACHE when the file list changes, so stale entries are purged.
 --------------------------------------------------------------------------- */
 
-const CACHE = 'fullscreen-timer-v4';
+const CACHE = 'fullscreen-timer-v5';
 
 const ASSETS = [
   './',
   'index.html',
   'manifest.webmanifest',
   'assets/favicon.svg',
-  'assets/fonts/Inconsolata-SemiBold.woff2',
+  'assets/fonts/Inconsolata-Bold.woff2',
   'css/tokens.css',
   'css/layout.css',
   'css/components.css',

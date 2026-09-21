@@ -205,7 +205,7 @@ html:not([data-ready="true"]) .app * {
   font-variant-numeric: tabular-nums slashed-zero;
   font-feature-settings: "tnum" 1, "zero" 1;
   font-size: 100px; /* user units only — the viewBox does the real scaling */
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: -0.02em;
   transition: fill var(--fade) ease;
 }

@@ -24,9 +24,9 @@
 @font-face {
   font-family: "Inconsolata";
   font-style: normal;
-  font-weight: 600;
+  font-weight: 700;
   font-display: swap;
-  src: url("../assets/fonts/Inconsolata-SemiBold.woff2") format("woff2");
+  src: url("../assets/fonts/Inconsolata-Bold.woff2") format("woff2");
   unicode-range: U+0000-00FF, U+2000-206F, U+2122, U+2191, U+2193, U+2212;
 }
 

@@ -39,8 +39,12 @@ export function createDigits({ svg, text, hours, hourSep, minutes, seconds }) {
     if (!box.width || !box.height) return;
 
     // A little breathing room, proportional to the text so it scales too.
-    const padX = box.width * 0.03;
-    const padY = box.height * 0.12;
+    // Vertical is almost always the binding dimension (a "H:MM:SS" string is
+    // wide, so preserveAspectRatio="meet" fits to height), so trimming it
+    // directly grows the rendered digits — kept just large enough that
+    // rounded corners and screen edges never crowd the glyphs.
+    const padX = box.width * 0.02;
+    const padY = box.height * 0.04;
     svg.setAttribute(
       'viewBox',
       `${box.x - padX} ${box.y - padY} ${box.width + padX * 2} ${box.height + padY * 2}`,
