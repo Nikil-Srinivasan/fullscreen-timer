@@ -403,6 +403,8 @@ el.btnSound.addEventListener('click', actions.toggleSound);
 el.btnFullscreen.addEventListener('click', actions.toggleFullscreen);
 el.btnSettings.addEventListener('click', actions.openSettings);
 el.btnHelp.addEventListener('click', actions.openHelp);
+el.settingsFullscreen.addEventListener('click', actions.toggleFullscreen);
+el.settingsHelp.addEventListener('click', actions.openHelp);
 el.settingsClose.addEventListener('click', ui.closeSheets);
 el.helpClose.addEventListener('click', ui.closeSheets);
 el.scrim.addEventListener('click', ui.closeSheets);
@@ -536,6 +538,47 @@ document.getElementById('btn-defaults').addEventListener('click', () => {
   ui.toast('Defaults restored');
 });
 
+/* --- Responsive controls -------------------------------------------------
+   flex-wrap used to let the toolbar spill onto a second row on a narrow
+   screen. Instead, fold buttons out of the row one at a time — least
+   essential first — until it fits back on one line. Everything folded away
+   still works via its keyboard shortcut, and Fullscreen/Help specifically
+   also got a duplicate entry inside Settings (see index.html) so nothing
+   folded away loses a pointer-reachable path entirely. */
+
+const FOLDABLE_CONTROLS = [el.btnHelp, el.btnFullscreen, el.btnSound, el.btnTheme, el.btnHide];
+
+function controlsWrapped() {
+  const tops = [...el.controls.children].filter((c) => !c.hidden).map((c) => c.getBoundingClientRect().top);
+  if (tops.length < 2) return false;
+  // A strict equality check here misreads a single row as wrapped: the
+  // segmented mode group isn't quite the same height as a plain .btn, and
+  // align-items: center offsets shorter/taller items by a couple of px even
+  // within one row, on top of ordinary sub-pixel rounding. Two genuinely
+  // different rows are separated by roughly a full button height, so a
+  // spread past half of that can only mean an actual second row.
+  const spread = Math.max(...tops) - Math.min(...tops);
+  return spread > el.btnStart.getBoundingClientRect().height / 2;
+}
+
+function fitControls() {
+  FOLDABLE_CONTROLS.forEach((btn) => {
+    btn.hidden = false;
+  });
+  for (const btn of FOLDABLE_CONTROLS) {
+    if (!controlsWrapped()) break;
+    btn.hidden = true;
+  }
+}
+
+let fitControlsTimer = 0;
+function scheduleFitControls() {
+  clearTimeout(fitControlsTimer);
+  fitControlsTimer = setTimeout(fitControls, 120);
+}
+
+window.addEventListener('resize', scheduleFitControls);
+
 /* --- Browser events ----------------------------------------------------- */
 
 onFullscreenChange((active) => {
@@ -578,8 +621,8 @@ bindKeyboard(actions);
 //
 // Waiting for document.fonts.ready first (capped, so a slow or failed font
 // load can never hold the reveal hostage) means the digits render in their
-// real font — self-hosted JetBrains Mono, see tokens.css — from the very
-// first visible frame, instead of painting in a fallback font and visibly
+// real font — self-hosted Inconsolata, see tokens.css — from the very first
+// visible frame, instead of painting in a fallback font and visibly
 // resizing when the real one swaps in a moment later.
 (async () => {
   const fontsReady = document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve();
@@ -601,6 +644,10 @@ bindKeyboard(actions);
     syncStartEnabled();
     updateClockBadge();
     markActive();
+    // Runs while .app is still hidden (visibility, not display, keeps it
+    // measurable) so the toolbar is already folded to one row for the very
+    // first visible frame, instead of popping buttons away just after reveal.
+    fitControls();
     clock.emit();
   } finally {
     document.documentElement.dataset.ready = 'true';

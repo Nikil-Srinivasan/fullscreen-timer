@@ -32,6 +32,15 @@
 
 /* --- Buttons ------------------------------------------------------------ */
 
+/* .btn sets its own `display` below, which — same trap .sheet[hidden] hit
+   earlier — would otherwise outrank the UA stylesheet's [hidden] rule and
+   leave a hidden button rendered anyway. Needed for the controls bar's
+   responsive overflow: buttons main.js hides on narrow screens must actually
+   disappear. */
+.btn[hidden] {
+  display: none;
+}
+
 .btn {
   display: inline-flex;
   align-items: center;
@@ -324,6 +333,33 @@
   .segmented--mode .segmented__opt {
     padding: 0.45rem 0.3rem;
     font-size: 0.78rem;
+  }
+}
+
+/* Below this, Start + Reset + the mode toggle + Settings — the four main.js
+   never folds away, since there is nowhere left to send them — still don't
+   fit on one line at the 34rem sizing above. A tighter squeeze specifically
+   for small phones rather than loosening the 34rem breakpoint everywhere. */
+@media (max-width: 24rem) {
+  .controls {
+    gap: 0.3rem;
+  }
+
+  .controls .btn {
+    padding: 0.5rem 0.5rem;
+  }
+
+  .controls .btn--primary {
+    min-width: 4.2rem;
+  }
+
+  .segmented--mode {
+    min-width: 6.8rem;
+  }
+
+  .segmented--mode .segmented__opt {
+    padding: 0.4rem 0.1rem;
+    font-size: 0.62rem;
   }
 }
 

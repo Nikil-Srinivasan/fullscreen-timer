@@ -53,6 +53,8 @@ export const el = {
 
   settings: $('settings'),
   settingsClose: $('settings-close'),
+  settingsFullscreen: $('settings-fullscreen'),
+  settingsHelp: $('settings-help'),
   groupDuration: $('group-duration'),
   inHours: $('in-hours'),
   inMinutes: $('in-minutes'),
