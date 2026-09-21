@@ -575,29 +575,40 @@ bindKeyboard(actions);
 // index.html/layout.css hide .app (visibility, not display, so it stays
 // measurable) until data-ready="true" lands here. That is what stops the
 // static markup's defaults — 5:00, "Countdown", "Auto" — from painting
-// before this synchronous block corrects them to whatever was saved. The
-// try/finally guarantees the reveal still happens even if something above
-// throws, so a bug here never leaves the page permanently blank.
-try {
-  applyTheme(settings.theme);
-  ui.setModeUI(settings.mode);
-  ui.setHideUI(settings.hide);
-  ui.setThemeUI(settings.theme);
-  ui.setSoundUI(settings.sound);
-  ui.setRingVisible(settings.ring);
-  ui.setFullscreenUI(isFullscreen());
-  ui.setStartButton(false);
-  ui.setBlank(false);
-  ui.setTone('normal');
-  ui.syncPanel(settings);
-  syncSelectedUnit();
-  syncStartEnabled();
-  updateClockBadge();
-  markActive();
-  clock.emit();
-} finally {
-  document.documentElement.dataset.ready = 'true';
-}
+// before this block corrects them to whatever was saved. The try/finally
+// guarantees the reveal still happens even if something above throws, so a
+// bug here never leaves the page permanently blank.
+//
+// Waiting for document.fonts.ready first (capped, so a slow or failed font
+// load can never hold the reveal hostage) means the digits render in their
+// real font — self-hosted JetBrains Mono, see tokens.css — from the very
+// first visible frame, instead of painting in a fallback font and visibly
+// resizing when the real one swaps in a moment later.
+(async () => {
+  const fontsReady = document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve();
+  await Promise.race([fontsReady, new Promise((resolve) => setTimeout(resolve, 300))]).catch(() => {});
+
+  try {
+    applyTheme(settings.theme);
+    ui.setModeUI(settings.mode);
+    ui.setHideUI(settings.hide);
+    ui.setThemeUI(settings.theme);
+    ui.setSoundUI(settings.sound);
+    ui.setRingVisible(settings.ring);
+    ui.setFullscreenUI(isFullscreen());
+    ui.setStartButton(false);
+    ui.setBlank(false);
+    ui.setTone('normal');
+    ui.syncPanel(settings);
+    syncSelectedUnit();
+    syncStartEnabled();
+    updateClockBadge();
+    markActive();
+    clock.emit();
+  } finally {
+    document.documentElement.dataset.ready = 'true';
+  }
+})();
 
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
   window.addEventListener('load', () => {

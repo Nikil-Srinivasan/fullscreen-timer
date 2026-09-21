@@ -134,4 +134,9 @@ see `SEO.md` for the steps.
 
 MIT — see [LICENSE](LICENSE).
 
+The digits use a self-hosted copy of [Inconsolata](https://github.com/googlefonts/Inconsolata)
+(chosen for its default slashed zero, so it renders identically in every browser regardless of
+which system fonts a browser's privacy settings expose), licensed under the SIL Open Font
+Licence — see `assets/fonts/OFL.txt`.
+
 Inspired by [alphakevin/fullscreen-timer](https://github.com/alphakevin/fullscreen-timer).

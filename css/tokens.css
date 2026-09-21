@@ -9,6 +9,27 @@
    wall display instead of shrinking into the middle of it.
 --------------------------------------------------------------------------- */
 
+/* Self-hosted rather than a system-font stack: relying on whatever monospace
+   font each browser resolves to meant the zero glyph itself differed between
+   them (a slash on one, a dot on another — Brave's anti-fingerprinting hides
+   system fonts Chrome can see, for one), which font-variant-numeric can't
+   fully paper over since it only nudges a font's own zero, it can't redraw
+   one that has none. Inconsolata draws a slashed zero by default — it's the
+   font's defining trait — so self-hosting it guarantees the exact same glyph
+   in every browser (checked directly: JetBrains Mono was tried first and
+   turned out to default to a dot, not a slash). It is cached by the service
+   worker like every other asset, so this keeps the "works offline, no
+   dependencies" promise instead of trading it for a Google Fonts request.
+   SIL Open Font License — see assets/fonts/OFL.txt. */
+@font-face {
+  font-family: "Inconsolata";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("../assets/fonts/Inconsolata-SemiBold.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+2000-206F, U+2122, U+2191, U+2193, U+2212;
+}
+
 :root {
   /* Surfaces and text */
   --bg: #f4f6f9;

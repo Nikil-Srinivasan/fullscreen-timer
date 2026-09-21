@@ -197,10 +197,13 @@ html:not([data-ready="true"]) .app * {
 
 .digits__text {
   fill: var(--digit);
-  font-family: ui-monospace, "SF Mono", "Cascadia Mono", "Segoe UI Mono", "Roboto Mono",
-    Menlo, Consolas, "Liberation Mono", monospace;
-  font-variant-numeric: tabular-nums;
-  font-feature-settings: "tnum" 1;
+  /* Inconsolata (self-hosted, see tokens.css) first, so every browser draws
+     the exact same slashed zero — the system-font stack after it is only a
+     fallback for the instant before that file loads. */
+  font-family: "Inconsolata", ui-monospace, "SF Mono", "Cascadia Mono", "Segoe UI Mono",
+    "Roboto Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  font-variant-numeric: tabular-nums slashed-zero;
+  font-feature-settings: "tnum" 1, "zero" 1;
   font-size: 100px; /* user units only — the viewBox does the real scaling */
   font-weight: 600;
   letter-spacing: -0.02em;
