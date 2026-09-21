@@ -7,12 +7,12 @@
 
 import { PRESET_MINUTES } from './state.js';
 import { splitDuration } from './format.js';
-import { effectiveTheme, labelFor } from './theme.js';
 
 const $ = (id) => document.getElementById(id);
 
 export const el = {
   app: $('app'),
+  topbar: $('topbar'),
 
   ring: $('ring'),
   ringTrack: $('ring-track'),
@@ -36,25 +36,13 @@ export const el = {
   startIcon: $('start-icon-path'),
   startLabel: $('start-label'),
   btnReset: $('btn-reset'),
-  btnHide: $('btn-hide'),
-  hideIcon: $('hide-icon-path'),
-  hideLabel: $('hide-label'),
-  btnTheme: $('btn-theme'),
-  themeIcon: $('theme-icon-path'),
-  themeLabel: $('theme-label'),
-  btnSound: $('btn-sound'),
-  soundWave: $('sound-icon-wave'),
-  soundLabel: $('sound-label'),
   btnFullscreen: $('btn-fullscreen'),
   fsIcon: $('fs-icon-path'),
-  fsLabel: $('fs-label'),
   btnSettings: $('btn-settings'),
   btnHelp: $('btn-help'),
 
   settings: $('settings'),
   settingsClose: $('settings-close'),
-  settingsFullscreen: $('settings-fullscreen'),
-  settingsHelp: $('settings-help'),
   groupDuration: $('group-duration'),
   inHours: $('in-hours'),
   inMinutes: $('in-minutes'),
@@ -79,18 +67,14 @@ const ICON = {
   play: 'M8 5v14l11-7z',
   pause: 'M7 5h3.5v14H7zm6.5 0H17v14h-3.5z',
 
-  eye: 'M12 5c5 0 9 4.5 9 7s-4 7-9 7-9-4.5-9-7 4-7 9-7zm0 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8z',
-  eyeOff:
-    'M3.4 2 2 3.4l3.3 3.3C3.9 7.9 2.9 9.4 2.3 10.6a2 2 0 0 0 0 1.8C3.8 15.4 7.4 19 12 19c1.6 0 3.1-.4 4.4-1.1L20.6 22 22 20.6zm8.6 14a4 4 0 0 1-3.8-5.2l1.7 1.7A2 2 0 0 0 12 14.5zm9.7-3.6c-1.2-2.3-3.6-5.2-6.9-6.3l3.1 3.1c.7.6 1.3 1.3 1.7 2-.4.7-.9 1.4-1.6 2l1.4 1.4c.9-.8 1.6-1.6 2.2-2.4a2 2 0 0 0 .1-1.8z',
-
-  sun: 'M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10zm-1-5h2v3h-2zm0 17h2v3h-2zM2 11h3v2H2zm17 0h3v2h-3zM4.2 5.6l1.4-1.4 2.1 2.1-1.4 1.4zm12 12l1.4-1.4 2.1 2.1-1.4 1.4zm2.2-13.4l1.4 1.4-2.1 2.1-1.4-1.4zM4.2 18.4l2.1-2.1 1.4 1.4-2.1 2.1z',
-  moon: 'M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z',
-
-  wave: 'M16.5 12a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4z',
-  cross: 'M20.3 8.9 18.9 7.5 17 9.4l-1.9-1.9-1.4 1.4 1.9 1.9-1.9 1.9 1.4 1.4 1.9-1.9 1.9 1.9 1.4-1.4-1.9-1.9z',
-
-  expand: 'M4 9V4h5v2H6v3zm11-5h5v5h-2V6h-3zM6 15v3h3v2H4v-5zm12 0h2v5h-5v-2h3z',
-  contract: 'M9 4h2v5H6V7h3zm4 0h2v3h3v2h-5zm0 11h5v2h-3v3h-2zM6 15h5v5H9v-3H6z',
+  // Four short diagonal arrows, one per corner — rendered with .icon--stroke
+  // (fill:none; stroke instead), which makes each one's direction just a
+  // line-to plus two wing lines at the arrowhead end, unambiguous to read
+  // back off the coordinates: expand's arrowheads sit at the outer corners
+  // (pointing away from centre), contract's sit at the inner points
+  // (pointing toward it), with the same four corners either way.
+  expand: 'M9 9 4 4M4 8V4H8M15 9 20 4M20 8V4H16M9 15 4 20M4 16V20H8M15 15 20 20M20 16V20H16',
+  contract: 'M4 4 9 9M9 5V9H5M20 4 15 9M15 5V9H19M4 20 9 15M9 19V15H5M20 20 15 15M15 19V15H19',
 };
 
 /* --- Reflecting state --------------------------------------------------- */
@@ -116,29 +100,22 @@ export function setModeUI(mode) {
   syncSegmented('[data-mode]', 'mode', mode);
 }
 
+/** Hide/theme/sound no longer have their own toolbar buttons — they're set
+    from Settings only now — but still drive the Settings panel's own
+    segmented controls, which this keeps in sync exactly as before. */
 export function setHideUI(hide) {
-  const on = hide !== 'off';
-  el.hideIcon.setAttribute('d', on ? ICON.eyeOff : ICON.eye);
-  el.hideLabel.textContent = on ? `${hide} min` : 'Visible';
-  el.btnHide.setAttribute('aria-pressed', on ? 'true' : 'false');
   syncSegmented('[data-hide]', 'hide', hide);
 }
 
 export function setThemeUI(theme) {
-  el.themeIcon.setAttribute('d', effectiveTheme(theme) === 'dark' ? ICON.moon : ICON.sun);
-  el.themeLabel.textContent = labelFor(theme);
   syncSegmented('[data-theme-opt]', 'themeOpt', theme);
-}
-
-export function setSoundUI(enabled) {
-  el.soundWave.setAttribute('d', enabled ? ICON.wave : ICON.cross);
-  el.soundLabel.textContent = enabled ? 'Sound' : 'Muted';
-  el.btnSound.setAttribute('aria-pressed', enabled ? 'false' : 'true');
 }
 
 export function setFullscreenUI(active) {
   el.fsIcon.setAttribute('d', active ? ICON.contract : ICON.expand);
-  el.fsLabel.textContent = active ? 'Exit' : 'Fullscreen';
+  const label = active ? 'Exit fullscreen' : 'Enter fullscreen';
+  el.btnFullscreen.title = `${label} (F)`;
+  el.btnFullscreen.setAttribute('aria-label', label);
   el.btnFullscreen.setAttribute('aria-pressed', active ? 'true' : 'false');
 }
 

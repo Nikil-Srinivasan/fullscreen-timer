@@ -259,7 +259,7 @@ const actions = {
   /** Add or remove countdown time. Only while paused — a running countdown is not editable. */
   adjust(deltaMs) {
     if (settings.mode !== 'countdown') {
-      ui.toast('Switch to countdown to set a length');
+      ui.toast('Switch to timer to set a length');
       return;
     }
     if (clock.running) return;
@@ -273,7 +273,7 @@ const actions = {
   selectUnit(unit) {
     if (!(unit in UNIT_STEP_MS) || clock.running) return;
     if (settings.mode !== 'countdown') {
-      ui.toast('Switch to countdown to set a length');
+      ui.toast('Switch to timer to set a length');
       return;
     }
     selectedUnit = unit;
@@ -341,7 +341,6 @@ store.subscribe((next, changed) => {
   ui.setModeUI(settings.mode);
   ui.setHideUI(settings.hide);
   ui.setThemeUI(settings.theme);
-  ui.setSoundUI(settings.sound);
   ui.setRingVisible(settings.ring);
   ui.syncPanel(settings);
   updateClockBadge();
@@ -397,14 +396,9 @@ document.addEventListener('click', (event) => {
 
 el.btnStart.addEventListener('click', actions.toggleStart);
 el.btnReset.addEventListener('click', actions.reset);
-el.btnHide.addEventListener('click', actions.cycleHide);
-el.btnTheme.addEventListener('click', actions.cycleTheme);
-el.btnSound.addEventListener('click', actions.toggleSound);
 el.btnFullscreen.addEventListener('click', actions.toggleFullscreen);
 el.btnSettings.addEventListener('click', actions.openSettings);
 el.btnHelp.addEventListener('click', actions.openHelp);
-el.settingsFullscreen.addEventListener('click', actions.toggleFullscreen);
-el.settingsHelp.addEventListener('click', actions.openHelp);
 el.settingsClose.addEventListener('click', ui.closeSheets);
 el.helpClose.addEventListener('click', ui.closeSheets);
 el.scrim.addEventListener('click', ui.closeSheets);
@@ -499,25 +493,6 @@ el.optRing.addEventListener('change', () => store.set({ ring: el.optRing.checked
 el.optWake.addEventListener('change', () => store.set({ wake: el.optWake.checked }));
 el.optClock.addEventListener('change', () => store.set({ showClock: el.optClock.checked }));
 
-// The About & FAQ article starts `hidden` (see index.html) so it isn't dead
-// weight on every visit; the link show/hides it, scrolling to it on the way
-// in. A real anchor href is kept for semantics, but native navigation is
-// intercepted — letting the browser change location.hash itself would fire
-// the shared-link hashchange listener below and wrongly reset the clock just
-// because someone wanted to read the FAQ.
-const aboutLink = document.getElementById('about-link');
-const aboutArrow = document.getElementById('about-arrow');
-const about = document.getElementById('about');
-
-aboutLink.addEventListener('click', (event) => {
-  event.preventDefault();
-  const opening = about.hidden;
-  about.hidden = !opening;
-  aboutLink.setAttribute('aria-expanded', opening ? 'true' : 'false');
-  aboutArrow.textContent = opening ? '↑' : '↓';
-  if (opening) about.scrollIntoView({ behavior: 'smooth', block: 'start' });
-});
-
 document.getElementById('btn-share').addEventListener('click', async () => {
   const url = store.shareUrl();
   try {
@@ -538,46 +513,66 @@ document.getElementById('btn-defaults').addEventListener('click', () => {
   ui.toast('Defaults restored');
 });
 
-/* --- Responsive controls -------------------------------------------------
-   flex-wrap used to let the toolbar spill onto a second row on a narrow
-   screen. Instead, fold buttons out of the row one at a time — least
-   essential first — until it fits back on one line. Everything folded away
-   still works via its keyboard shortcut, and Fullscreen/Help specifically
-   also got a duplicate entry inside Settings (see index.html) so nothing
-   folded away loses a pointer-reachable path entirely. */
-
-const FOLDABLE_CONTROLS = [el.btnHelp, el.btnFullscreen, el.btnSound, el.btnTheme, el.btnHide];
-
-function controlsWrapped() {
-  const tops = [...el.controls.children].filter((c) => !c.hidden).map((c) => c.getBoundingClientRect().top);
-  if (tops.length < 2) return false;
-  // A strict equality check here misreads a single row as wrapped: the
-  // segmented mode group isn't quite the same height as a plain .btn, and
-  // align-items: center offsets shorter/taller items by a couple of px even
-  // within one row, on top of ordinary sub-pixel rounding. Two genuinely
-  // different rows are separated by roughly a full button height, so a
-  // spread past half of that can only mean an actual second row.
-  const spread = Math.max(...tops) - Math.min(...tops);
-  return spread > el.btnStart.getBoundingClientRect().height / 2;
-}
-
-function fitControls() {
-  FOLDABLE_CONTROLS.forEach((btn) => {
-    btn.hidden = false;
+/* --- Centring and alignment -----------------------------------------------
+   Start and Reset read as a matched pair, but "Start"/"Pause" and "Reset"
+   are different-width text at the same padding, so a shared CSS min-width
+   only makes them equal where that floor is the binding constraint (wide
+   screens) — on narrower ones, whichever label is actually wider wins and
+   the two drift apart again. Measuring and pinning both to the wider one's
+   rendered width is exact at every size, not just above some breakpoint. */
+function matchWidths(nodes) {
+  nodes.forEach((node) => {
+    node.style.width = '';
   });
-  for (const btn of FOLDABLE_CONTROLS) {
-    if (!controlsWrapped()) break;
-    btn.hidden = true;
-  }
+  const width = Math.max(...nodes.map((node) => node.getBoundingClientRect().width));
+  nodes.forEach((node) => {
+    node.style.width = `${width}px`;
+  });
+  return width;
 }
 
-let fitControlsTimer = 0;
-function scheduleFitControls() {
-  clearTimeout(fitControlsTimer);
-  fitControlsTimer = setTimeout(fitControls, 120);
+/* The mode toggle above Start/Reset sizes itself off its own content and
+   padding — nothing ties the two rows together. Matching its width to the
+   now-equalised Start/Reset row is what makes the two read as one aligned
+   block, centred on the same line, instead of two independently-sized rows
+   that happen to share a midpoint. */
+function alignModeToggle() {
+  matchWidths([el.btnStart, el.btnReset]);
+  const modeToggle = document.querySelector('.segmented--mode');
+  modeToggle.style.width = '';
+  const width = document.querySelector('.controls__center').getBoundingClientRect().width;
+  if (width > 0) modeToggle.style.width = `${width}px`;
 }
 
-window.addEventListener('resize', scheduleFitControls);
+/* The stage's "1fr" row is the leftover space between the topbar above and
+   the controls below — its centre only equals the *viewport's* true centre
+   when those two reserve equal height. They never do (the topbar is a
+   couple of icons; the bottom carries the whole toolbar), so the digits
+   would otherwise sit visibly off-centre, and drift by a different amount
+   on every screen and every orientation. Padding out whichever side is
+   currently shorter to match the other keeps the middle row — and so the
+   digits centred inside it — pinned to the exact centre no matter how tall
+   either side ends up being. */
+function centerStage() {
+  el.topbar.style.marginBottom = '';
+  const topH = el.topbar.getBoundingClientRect().height;
+  const bottomH = el.controls.getBoundingClientRect().height;
+  const diff = bottomH - topH;
+  if (diff > 0) el.topbar.style.marginBottom = `${diff}px`;
+}
+
+function layoutChrome() {
+  alignModeToggle();
+  centerStage();
+}
+
+let layoutChromeTimer = 0;
+function scheduleLayoutChrome() {
+  clearTimeout(layoutChromeTimer);
+  layoutChromeTimer = setTimeout(layoutChrome, 120);
+}
+
+window.addEventListener('resize', scheduleLayoutChrome);
 
 /* --- Browser events ----------------------------------------------------- */
 
@@ -633,7 +628,6 @@ bindKeyboard(actions);
     ui.setModeUI(settings.mode);
     ui.setHideUI(settings.hide);
     ui.setThemeUI(settings.theme);
-    ui.setSoundUI(settings.sound);
     ui.setRingVisible(settings.ring);
     ui.setFullscreenUI(isFullscreen());
     ui.setStartButton(false);
@@ -645,9 +639,10 @@ bindKeyboard(actions);
     updateClockBadge();
     markActive();
     // Runs while .app is still hidden (visibility, not display, keeps it
-    // measurable) so the toolbar is already folded to one row for the very
-    // first visible frame, instead of popping buttons away just after reveal.
-    fitControls();
+    // measurable) so the mode toggle is already aligned and the digits
+    // already centred for the very first visible frame, instead of
+    // shifting into place just after reveal.
+    layoutChrome();
     clock.emit();
   } finally {
     document.documentElement.dataset.ready = 'true';

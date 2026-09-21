@@ -14,7 +14,7 @@ give them — a 320px phone or an 8K wall.
 
 ## Features
 
-- **Countdown or stopwatch**, switched with a segmented toggle that shows the mode you're in
+- **Timer or stopwatch**, switched with a segmented toggle that shows the mode you're in
 - **Start / pause / reset**, from a button or the spacebar — clicking the digits never starts
   or stops the clock. Reset always clears to zero, the same as a stopwatch; Start stays
   disabled until a countdown has a length to run

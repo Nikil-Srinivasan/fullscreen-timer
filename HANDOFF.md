@@ -46,7 +46,7 @@ Also worth knowing, in the same spirit:
   alongside `requestAnimationFrame` because rAF is paused in background tabs — without it the
   alarm would not fire and hidden-mode reveals would drift while the tab is hidden.
 - **Wheel events over `.stage` call `preventDefault()`.** That is why the page cannot be scrolled
-  from the timer area, and why the explicit "About & FAQ" link exists under the controls.
+  from the timer area.
 
 ## Verified, and how
 

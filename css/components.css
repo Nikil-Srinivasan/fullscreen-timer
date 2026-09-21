@@ -128,6 +128,18 @@
   flex: none;
 }
 
+/* Outline style for icons built as simple diagonal-arrow strokes (the
+   fullscreen enter/exit pair) rather than a filled silhouette — much easier
+   to get an arrow's direction unambiguously right with a handful of line
+   segments than with a filled outline. */
+.icon--stroke {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 .iconbtn {
   display: inline-flex;
   align-items: center;
@@ -146,22 +158,26 @@
   color: var(--text);
 }
 
-/* On narrow screens the labels go, the icons stay. */
-@media (max-width: 34rem) {
-  .controls .btn__label {
-    display: none;
-  }
+/* Help/Settings/Fullscreen in the controls bar's side trays: a touch target
+   matching .btn's, on the plain .iconbtn otherwise sized for a small sheet
+   close button. */
+.iconbtn--tray {
+  width: 2.75rem;
+  height: 2.75rem;
+}
 
+/* Narrower padding and a smaller shared floor for Start/Reset — applied to
+   both alike (not just .btn--primary) so they stay the same width as each
+   other at every size, not just above this breakpoint. Labels stay on:
+   with only two buttons in the centre column now, there is room to spare
+   even on a small phone. */
+@media (max-width: 34rem) {
   .controls .btn {
     padding: 0.55rem 0.75rem;
   }
 
-  .controls .btn--primary {
+  .controls__center .btn {
     min-width: 5rem;
-  }
-
-  .controls .btn--primary .btn__label {
-    display: inline;
   }
 }
 
@@ -309,11 +325,25 @@
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
 }
 
-/* The mode toggle lives in the controls bar among the icon buttons, not the
-   settings sheet, so it needs to be sized against .btn rather than fill a
-   26rem-wide panel. */
+/* The mode toggle lives in the topbar, not the settings sheet, so it needs
+   to be sized against .btn rather than fill a 26rem-wide panel — and a
+   little clearance above it, rather than sitting flush against the very
+   top edge like the corner icons either side of it. js/main.js sets its
+   width to match the Start/Reset row below (see centerStage), so this
+   min-width is only the pre-JS/fallback floor. */
 .segmented--mode {
   min-width: 12rem;
+  margin-top: 0.5rem;
+}
+
+/* Only the topbar's mode toggle gets an icon (to read like Start/Reset) —
+   Hide/Theme in Settings stay plain text, so this stays scoped rather than
+   living on the shared .segmented__opt base. */
+.segmented--mode .segmented__opt {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
 }
 
 /* Countdown vs stopwatch is the one segmented control worth calling out from
@@ -336,10 +366,8 @@
   }
 }
 
-/* Below this, Start + Reset + the mode toggle + Settings — the four main.js
-   never folds away, since there is nowhere left to send them — still don't
-   fit on one line at the 34rem sizing above. A tighter squeeze specifically
-   for small phones rather than loosening the 34rem breakpoint everywhere. */
+/* A tighter squeeze specifically for small phones, layered on top of the
+   34rem sizing above, rather than loosening that breakpoint everywhere. */
 @media (max-width: 24rem) {
   .controls {
     gap: 0.3rem;
@@ -349,7 +377,7 @@
     padding: 0.5rem 0.5rem;
   }
 
-  .controls .btn--primary {
+  .controls__center .btn {
     min-width: 4.2rem;
   }
 
@@ -582,89 +610,3 @@ kbd {
   display: none;
 }
 
-/* --- The article below the timer ---------------------------------------- */
-
-.content {
-  /* A measure cap is right here and nowhere else: prose is unreadable at
-     3000px wide, while the timer above must never be capped at all. */
-  max-width: 46rem;
-  margin: 0 auto;
-  padding:
-    3.5rem
-    calc(1.5rem + env(safe-area-inset-right))
-    4rem
-    calc(1.5rem + env(safe-area-inset-left));
-  border-top: 1px solid var(--border);
-  font-size: 1rem;
-  line-height: 1.7;
-  color: var(--text);
-}
-
-.content h2 {
-  margin: 2.5rem 0 0.75rem;
-  font-size: 1.4rem;
-  line-height: 1.25;
-  letter-spacing: -0.01em;
-}
-
-.content h2:first-of-type {
-  margin-top: 0;
-}
-
-.content h3 {
-  margin: 1.75rem 0 0.4rem;
-  font-size: 1.02rem;
-  line-height: 1.35;
-}
-
-.content p {
-  margin: 0 0 1rem;
-  color: var(--text-muted);
-}
-
-.content li {
-  margin-bottom: 0.5rem;
-  color: var(--text-muted);
-}
-
-.content ul {
-  margin: 0 0 1rem;
-  padding-left: 1.2rem;
-}
-
-.content strong,
-.content em {
-  color: var(--text);
-}
-
-.content a {
-  color: var(--accent);
-  text-underline-offset: 0.2em;
-}
-
-.content kbd {
-  font-size: 0.72rem;
-}
-
-.faq {
-  margin-top: 0.5rem;
-  padding: 0.5rem 1.2rem 1.2rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  background: var(--surface);
-}
-
-.faq h3:first-child {
-  margin-top: 1rem;
-}
-
-.content__footer {
-  margin-top: 3rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid var(--border);
-  font-size: 0.88rem;
-}
-
-.content__footer p {
-  margin: 0 0 0.4rem;
-}

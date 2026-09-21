@@ -96,9 +96,23 @@
   </svg>
 
   <header class="topbar" id="topbar">
-    <div class="topbar__side"></div>
-    <div class="topbar__side topbar__side--end">
+    <div class="topbar__side">
       <span class="badge badge--muted" id="clock-badge" title="Time of day" hidden></span>
+    </div>
+    <div class="segmented segmented--mode" role="radiogroup" aria-label="Timer mode" title="Switch timer / stopwatch (S)">
+      <button class="segmented__opt" type="button" role="radio" data-mode="countdown" aria-checked="true">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2v6h.01L6 8.01 10 12l-4 4 .01.01H6V22h12v-5.99h-.01L18 16l-4-4 4-3.99-.01-.01H18V2H6zm10 14.5V20H8v-3.5l4-4 4 4zm-4-5l-4-4V4h8v3.5l-4 4z"/></svg>
+        <span>Timer</span>
+      </button>
+      <button class="segmented__opt" type="button" role="radio" data-mode="stopwatch" aria-checked="false">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 1H9v2h6V1zm-4 13h2V8h-2v6zm8.03-6.61 1.42-1.42c-.43-.51-.9-.99-1.41-1.41l-1.42 1.42A8.962 8.962 0 0 0 12 4c-4.97 0-9 4.03-9 9s4.02 9 9 9a9 9 0 0 0 7.03-14.61zM12 20c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/></svg>
+        <span>Stopwatch</span>
+      </button>
+    </div>
+    <div class="topbar__side topbar__side--end">
+      <button class="iconbtn iconbtn--tray" id="btn-settings" type="button" title="Settings (,)" aria-haspopup="dialog" aria-label="Settings">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M19.14,12.94c0.04,-0.3 0.06,-0.61 0.06,-0.94c0,-0.32 -0.02,-0.64 -0.07,-0.94l2.03,-1.58c0.18,-0.14 0.23,-0.41 0.12,-0.61l-1.92,-3.32c-0.12,-0.22 -0.37,-0.29 -0.59,-0.22l-2.39,0.96c-0.5,-0.38 -1.03,-0.7 -1.62,-0.94L14.4,2.81c-0.04,-0.24 -0.24,-0.41 -0.48,-0.41h-3.84c-0.24,0 -0.43,0.17 -0.47,0.41L9.25,5.35C8.66,5.59 8.12,5.92 7.63,6.29L5.24,5.33c-0.22,-0.08 -0.47,0 -0.59,0.22L2.74,8.87C2.62,9.08 2.66,9.34 2.86,9.48l2.03,1.58C4.84,11.36 4.8,11.69 4.8,12s0.02,0.64 0.07,0.94l-2.03,1.58c-0.18,0.14 -0.23,0.41 -0.12,0.61l1.92,3.32c0.12,0.22 0.37,0.29 0.59,0.22l2.39,-0.96c0.5,0.38 1.03,0.7 1.62,0.94l0.36,2.54c0.05,0.24 0.24,0.41 0.48,0.41h3.84c0.24,0 0.44,-0.17 0.47,-0.41l0.36,-2.54c0.59,-0.24 1.13,-0.56 1.62,-0.94l2.39,0.96c0.22,0.08 0.47,0 0.59,-0.22l1.92,-3.32c0.12,-0.22 0.07,-0.47 -0.12,-0.61L19.14,12.94zM12,15.6c-1.98,0 -3.6,-1.62 -3.6,-3.6s1.62,-3.6 3.6,-3.6s3.6,1.62 3.6,3.6S13.98,15.6 12,15.6z"/></svg>
+      </button>
     </div>
   </header>
 
@@ -125,50 +139,29 @@
   </main>
 
   <nav class="controls" id="controls" aria-label="Timer controls">
-    <button class="btn btn--primary" id="btn-start" type="button" title="Start or pause (Space)">
-      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path id="start-icon-path" d="M8 5v14l11-7z"/></svg>
-      <span class="btn__label" id="start-label">Start</span>
-    </button>
-
-    <button class="btn" id="btn-reset" type="button" title="Reset (R)">
-      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5V2L7 6l5 4V7a5 5 0 1 1-5 5H5a7 7 0 1 0 7-7z"/></svg>
-      <span class="btn__label">Reset</span>
-    </button>
-
-    <div class="segmented segmented--mode" role="radiogroup" aria-label="Timer mode" title="Switch countdown / stopwatch (S)">
-      <button class="segmented__opt" type="button" role="radio" data-mode="countdown" aria-checked="true">Countdown</button>
-      <button class="segmented__opt" type="button" role="radio" data-mode="stopwatch" aria-checked="false">Stopwatch</button>
+    <div class="controls__side controls__side--start">
+      <button class="iconbtn iconbtn--tray" id="btn-help" type="button" title="Keyboard shortcuts (?)" aria-haspopup="dialog" aria-label="Keyboard shortcuts">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 5H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zM8 8h2v2H8V8zm0 3h2v2H8v-2zm-1 2H5v-2h2v2zm0-3H5V8h2v2zm9 7H8v-2h8v2zm0-4h-2v-2h2v2zm0-3h-2V8h2v2zm3 3h-2v-2h2v2zm0-3h-2V8h2v2z"/></svg>
+      </button>
     </div>
 
-    <button class="btn" id="btn-hide" type="button" title="Hide the timer, reveal periodically (H)">
-      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path id="hide-icon-path" d="M12 5c5 0 9 4.5 9 7s-4 7-9 7-9-4.5-9-7 4-7 9-7zm0 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8z"/></svg>
-      <span class="btn__label" id="hide-label">Visible</span>
-    </button>
+    <div class="controls__center">
+      <button class="btn btn--primary" id="btn-start" type="button" title="Start or pause (Space)">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path id="start-icon-path" d="M8 5v14l11-7z"/></svg>
+        <span class="btn__label" id="start-label">Start</span>
+      </button>
 
-    <button class="btn" id="btn-theme" type="button" title="Theme: auto, light, dark (T)">
-      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path id="theme-icon-path" d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z"/></svg>
-      <span class="btn__label" id="theme-label">Auto</span>
-    </button>
+      <button class="btn" id="btn-reset" type="button" title="Reset (R)">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5V2L7 6l5 4V7a5 5 0 1 1-5 5H5a7 7 0 1 0 7-7z"/></svg>
+        <span class="btn__label">Reset</span>
+      </button>
+    </div>
 
-    <button class="btn" id="btn-sound" type="button" title="Mute or unmute the alarm (M)">
-      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path id="sound-icon-path" d="M4 9v6h4l5 4V5L8 9z"/><path id="sound-icon-wave" d="M16.5 12a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4z"/></svg>
-      <span class="btn__label" id="sound-label">Sound</span>
-    </button>
-
-    <button class="btn" id="btn-fullscreen" type="button" title="Enter or exit fullscreen (F)">
-      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path id="fs-icon-path" d="M4 9V4h5v2H6v3zm11-5h5v5h-2V6h-3zM6 15v3h3v2H4v-5zm12 0h2v5h-5v-2h3z"/></svg>
-      <span class="btn__label" id="fs-label">Fullscreen</span>
-    </button>
-
-    <button class="btn" id="btn-settings" type="button" title="Settings (,)" aria-haspopup="dialog">
-      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zm8.8 2A8.9 8.9 0 0 0 20 8.1l1.6-2.2-1.5-1.5L17.9 6a8.9 8.9 0 0 0-1.9-.8L15.6 2.5h-2.1L13 5.2a8.9 8.9 0 0 0-1.9.8L8.9 4.4 7.4 5.9 9 8.1a8.9 8.9 0 0 0-.8 1.9l-2.7.4v2.1l2.7.4c.2.7.5 1.3.8 1.9l-1.6 2.2 1.5 1.5 2.2-1.6c.6.4 1.2.6 1.9.8l.4 2.7h2.1l.4-2.7c.7-.2 1.3-.5 1.9-.8l2.2 1.6 1.5-1.5-1.6-2.2c.4-.6.6-1.2.8-1.9l2.7-.4v-2.1z"/></svg>
-      <span class="btn__label">Settings</span>
-    </button>
-
-    <button class="btn btn--ghost" id="btn-help" type="button" title="Keyboard shortcuts (?)" aria-haspopup="dialog">
-      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm1 15h-2v-2h2zm1.6-6.1-.9.9c-.7.7-1.1 1.3-1.1 2.7h-2v-.5c0-1 .4-1.9 1.1-2.6l1.3-1.3A2 2 0 0 0 10 8.5H8a4 4 0 0 1 8 0 3.2 3.2 0 0 1-1.4 2.4z"/></svg>
-      <span class="btn__label">Help</span>
-    </button>
+    <div class="controls__side controls__side--end">
+      <button class="iconbtn iconbtn--tray" id="btn-fullscreen" type="button" title="Enter fullscreen (F)" aria-label="Enter fullscreen">
+        <svg class="icon icon--stroke" viewBox="0 0 24 24" aria-hidden="true"><path id="fs-icon-path" d="M9 9 4 4M4 8V4H8M15 9 20 4M20 8V4H16M9 15 4 20M4 16V20H8M15 15 20 20M20 16V20H16"/></svg>
+      </button>
+    </div>
   </nav>
 
   <div class="sheet" id="settings" role="dialog" aria-modal="false" aria-labelledby="settings-title" hidden>
@@ -184,13 +177,13 @@
       <section class="group">
         <h3 class="group__title">Mode</h3>
         <div class="segmented" role="radiogroup" aria-label="Timer mode">
-          <button class="segmented__opt" type="button" role="radio" data-mode="countdown" aria-checked="true">Countdown</button>
+          <button class="segmented__opt" type="button" role="radio" data-mode="countdown" aria-checked="true">Timer</button>
           <button class="segmented__opt" type="button" role="radio" data-mode="stopwatch" aria-checked="false">Stopwatch</button>
         </div>
       </section>
 
       <section class="group" id="group-duration">
-        <h3 class="group__title">Countdown length</h3>
+        <h3 class="group__title">Timer length</h3>
         <div class="timefields">
           <label class="field"><span class="field__label">Hours</span>
             <input class="input" id="in-hours" type="number" min="0" max="99" step="1" inputmode="numeric" value="0"></label>
@@ -218,7 +211,7 @@
 
       <section class="group">
         <h3 class="group__title">Options</h3>
-        <label class="check"><input type="checkbox" id="opt-sound"><span>Alarm sound when the countdown hits zero</span></label>
+        <label class="check"><input type="checkbox" id="opt-sound"><span>Alarm sound when the timer hits zero</span></label>
         <label class="check"><input type="checkbox" id="opt-ring"><span>Show the progress ring</span></label>
         <label class="check"><input type="checkbox" id="opt-wake"><span>Keep the screen awake while running</span></label>
         <label class="check"><input type="checkbox" id="opt-clock"><span>Show the time of day</span></label>
@@ -230,21 +223,6 @@
           <button class="segmented__opt" type="button" role="radio" data-theme-opt="auto" aria-checked="true">Auto</button>
           <button class="segmented__opt" type="button" role="radio" data-theme-opt="light" aria-checked="false">Light</button>
           <button class="segmented__opt" type="button" role="radio" data-theme-opt="dark" aria-checked="false">Dark</button>
-        </div>
-      </section>
-
-      <section class="group">
-        <h3 class="group__title">More controls</h3>
-        <p class="group__hint">On a narrow screen some toolbar buttons make way for this panel — reach them here instead.</p>
-        <div class="row">
-          <button class="btn btn--wide" id="settings-fullscreen" type="button">
-            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5v2H6v3zm11-5h5v5h-2V6h-3zM6 15v3h3v2H4v-5zm12 0h2v5h-5v-2h3z"/></svg>
-            <span class="btn__label">Fullscreen</span>
-          </button>
-          <button class="btn btn--wide btn--ghost" id="settings-help" type="button">
-            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm1 15h-2v-2h2zm1.6-6.1-.9.9c-.7.7-1.1 1.3-1.1 2.7h-2v-.5c0-1 .4-1.9 1.1-2.6l1.3-1.3A2 2 0 0 0 10 8.5H8a4 4 0 0 1 8 0 3.2 3.2 0 0 1-1.4 2.4z"/></svg>
-            <span class="btn__label">Keyboard shortcuts</span>
-          </button>
         </div>
       </section>
 
@@ -269,7 +247,7 @@
       <dl class="keys">
         <div class="keys__row"><dt><kbd>Space</kbd></dt><dd>Start / pause</dd></div>
         <div class="keys__row"><dt><kbd>R</kbd></dt><dd>Reset</dd></div>
-        <div class="keys__row"><dt><kbd>S</kbd></dt><dd>Switch countdown / stopwatch</dd></div>
+        <div class="keys__row"><dt><kbd>S</kbd></dt><dd>Switch timer / stopwatch</dd></div>
         <div class="keys__row"><dt><kbd>F</kbd></dt><dd>Fullscreen on / off</dd></div>
         <div class="keys__row"><dt><kbd>H</kbd></dt><dd>Cycle hide mode: off, 1 min, 5 min</dd></div>
         <div class="keys__row"><dt><kbd>T</kbd></dt><dd>Theme: auto, light, dark</dd></div>
@@ -284,164 +262,14 @@
       <p class="help__note">Click the hour, minute or second digits to choose which one arrow keys and the
         scroll wheel change — the click never starts or pauses the clock. Start and pause always go through
         the Start button or <kbd>Space</kbd>. The length can only be changed while paused; pause first if
-        the countdown is running. While the timer is hidden, a tap peeks at the time without changing
+        the timer is running. While it is hidden, a tap peeks at the time without changing
         anything.</p>
     </div>
   </div>
 
   <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
   <div class="scrim" id="scrim" hidden></div>
-
-  <a class="scrolldown" id="about-link" href="#about" aria-expanded="false" aria-controls="about">About &amp; FAQ <span class="scrolldown__arrow" id="about-arrow" aria-hidden="true">&darr;</span></a>
 </div>
-
-<!-- Hidden until the link above is clicked (see main.js) — not removed, so it stays
-     real content for search engines: a disclosure a visitor has to click to read is
-     ordinary, well-supported UX, and Google documents indexing it the same as
-     visible text. It just does not need to sit on screen for every visitor. -->
-<article class="content" id="about" hidden>
-
-  <h2>A timer you can read from the back of the room</h2>
-  <p>
-    Most web timers cap how large their digits can grow. Open one on a lecture-hall projector or a
-    meeting-room TV and the numbers stop at some fixed size, marooned in the middle of an enormous
-    screen. This one has no maximum: the digits are drawn as vector text fitted to the space they are
-    given, so they fill a 5-inch phone and an 8K wall display equally well. There is nothing to
-    configure for it to happen — open the page on any screen and it is already the right size.
-  </p>
-
-  <h2>Countdown or stopwatch</h2>
-  <p>
-    Set a countdown when you have a fixed slot: a conference talk, a lightning round, an exam, a
-    workshop exercise. Type the length, pick one of the presets, or click an hour, minute or second
-    digit and turn the scroll wheel or an arrow key. Pause it to change the length — a running
-    countdown holds still until you do, so a stray scroll mid-talk cannot change the schedule.
-    Switch to stopwatch mode when you want to know how long something actually took.
-  </p>
-  <p>
-    A countdown stops itself the moment it reaches zero — it never carries on into negative time, so
-    the room sees a clean stop rather than a running tally of overrun. Before that, the digits turn
-    amber for the last 50% of the countdown and red for the final 15%, so the warning scales with the
-    length of the slot, without anyone having to say anything.
-  </p>
-
-  <h2>Hide the timer and glance instead of stare</h2>
-  <p>
-    A timer you can watch is a timer you <em>will</em> watch. Hidden mode blanks the screen while the
-    clock keeps running and flashes the time for a few seconds each minute, or every five minutes,
-    then blanks again. Speakers stop clock-watching, and the audience is not distracted by digits
-    ticking down throughout the talk. A tap peeks at the time whenever you want, without pausing
-    anything or disturbing the schedule.
-  </p>
-
-  <h2>Built for the room, not the desk</h2>
-  <ul>
-    <li><strong>Fullscreen</strong> with one key, and the controls fade away once you stop moving the mouse.</li>
-    <li><strong>The screen stays awake</strong> while the timer runs, so your laptop does not sleep mid-talk.</li>
-    <li><strong>Dark and light themes</strong>, following your system by default — dark for a darkened room, light for a bright one.</li>
-    <li><strong>It works offline</strong> once loaded, which matters on conference wifi.</li>
-    <li><strong>Shareable links</strong>: press "Copy shareable link" in Settings to send a colleague the exact setup — the address bar itself stays put otherwise.</li>
-    <li><strong>Keyboard and scroll wheel</strong>: space to start, <kbd>R</kbd> to reset, click an hour, minute or second digit to choose what arrows or the wheel change.</li>
-  </ul>
-
-  <h2>Questions</h2>
-
-  <section class="faq">
-    <h3>Is it free?</h3>
-    <p>Yes. It is free, open source under the MIT licence, has no accounts, no adverts and no tracking.</p>
-
-    <h3>Does it work offline?</h3>
-    <p>
-      Yes. After the first visit the timer is stored in your browser and runs without a connection. You
-      can also install it as an app from your browser menu.
-    </p>
-
-    <h3>Can I use it on a projector or a TV?</h3>
-    <p>
-      That is what it is for. The digits scale to whatever screen you put them on, with no upper limit,
-      so a 4K display shows 4K-sized numbers rather than a small timer in the middle of a large screen.
-    </p>
-
-    <h3>How do I hide the timer and show it every five minutes?</h3>
-    <p>
-      Press <kbd>H</kbd> until it reads &ldquo;5 min&rdquo;, or open Settings and choose it under
-      &ldquo;Hide the timer&rdquo;. The screen goes blank and the time appears for a few seconds at every
-      five-minute mark. You can change how long each flash lasts.
-    </p>
-
-    <h3>Will it stop my screen going to sleep?</h3>
-    <p>
-      Yes, while the timer is running, in browsers that support screen wake locks. Safari does not, so
-      on an iPhone or iPad you may still want to raise your auto-lock time.
-    </p>
-
-    <h3>Does it work on a phone?</h3>
-    <p>
-      Yes, on any modern browser. On iPhone and iPad, fullscreen hides the page controls but not
-      Safari&rsquo;s own toolbars, because Safari does not offer the fullscreen API to ordinary web pages.
-    </p>
-
-    <h3>Can I save a timer I use often?</h3>
-    <p>
-      Just bookmark the plain page — your settings are remembered between visits automatically. For a
-      timer you want to hand to someone else exactly as configured, use "Copy shareable link" in Settings.
-    </p>
-  </section>
-
-  <footer class="content__footer">
-    <p>
-      Free and open source &mdash;
-      <a href="https://github.com/Nikil-Srinivasan/fullscreen-timer">source on GitHub</a>.
-      Inspired by <a href="https://github.com/alphakevin/fullscreen-timer">alphakevin/fullscreen-timer</a>.
-    </p>
-    <p><a href="#app">Back to the timer &uarr;</a></p>
-  </footer>
-
-</article>
-
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  "mainEntity": [
-    {
-      "@type": "Question",
-      "name": "Is it free?",
-      "acceptedAnswer": { "@type": "Answer", "text": "Yes. It is free, open source under the MIT licence, has no accounts, no adverts and no tracking." }
-    },
-    {
-      "@type": "Question",
-      "name": "Does it work offline?",
-      "acceptedAnswer": { "@type": "Answer", "text": "Yes. After the first visit the timer is stored in your browser and runs without a connection. You can also install it as an app from your browser menu." }
-    },
-    {
-      "@type": "Question",
-      "name": "Can I use it on a projector or a TV?",
-      "acceptedAnswer": { "@type": "Answer", "text": "That is what it is for. The digits scale to whatever screen you put them on, with no upper limit, so a 4K display shows 4K-sized numbers rather than a small timer in the middle of a large screen." }
-    },
-    {
-      "@type": "Question",
-      "name": "How do I hide the timer and show it every five minutes?",
-      "acceptedAnswer": { "@type": "Answer", "text": "Press H until it reads 5 min, or open Settings and choose it under Hide the timer. The screen goes blank and the time appears for a few seconds at every five-minute mark. You can change how long each flash lasts." }
-    },
-    {
-      "@type": "Question",
-      "name": "Will it stop my screen going to sleep?",
-      "acceptedAnswer": { "@type": "Answer", "text": "Yes, while the timer is running, in browsers that support screen wake locks. Safari does not, so on an iPhone or iPad you may still want to raise your auto-lock time." }
-    },
-    {
-      "@type": "Question",
-      "name": "Does it work on a phone?",
-      "acceptedAnswer": { "@type": "Answer", "text": "Yes, on any modern browser. On iPhone and iPad, fullscreen hides the page controls but not Safari's own toolbars, because Safari does not offer the fullscreen API to ordinary web pages." }
-    },
-    {
-      "@type": "Question",
-      "name": "Can I save a timer I use often?",
-      "acceptedAnswer": { "@type": "Answer", "text": "Just bookmark the plain page — your settings are remembered between visits automatically. For a timer you want to hand to someone else exactly as configured, use \"Copy shareable link\" in Settings." }
-    }
-  ]
-}
-</script>
 
 <script type="module" src="js/main.js"></script>
 </body>
