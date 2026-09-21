@@ -8,11 +8,8 @@
    created on the first interaction and resumed on every later one.
 --------------------------------------------------------------------------- */
 
-const REPEAT_MS = 4_000;
-
 export function createSound() {
   let ctx = null;
-  let repeatTimer = 0;
 
   function context() {
     const Ctor = window.AudioContext || window.webkitAudioContext;
@@ -63,20 +60,5 @@ export function createSound() {
     tone(t + 0.44, 1175, 0.32, 0.26);
   }
 
-  function alarm({ repeat = false } = {}) {
-    stop();
-    chime();
-    if (repeat) {
-      repeatTimer = setInterval(chime, REPEAT_MS);
-    }
-  }
-
-  function stop() {
-    if (repeatTimer) {
-      clearInterval(repeatTimer);
-      repeatTimer = 0;
-    }
-  }
-
-  return { unlock, alarm, stop };
+  return { unlock, alarm: chime };
 }

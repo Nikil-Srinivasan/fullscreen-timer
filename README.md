@@ -27,11 +27,12 @@ give them — a 320px phone or an 8K wall.
   the wheel change, one unit at a time. Only while paused — a running countdown holds still.
 - **Warning colours** — amber for the last 50% of the countdown, red for the final 15%, scaled
   to the length of the timer rather than a fixed number of seconds
-- **Alarm** at zero, synthesised in the browser (no audio files), with optional repeat
+- **Alarm** at zero, synthesised in the browser (no audio files)
 - **Stops at zero** — a countdown never counts into negative time
 - **Progress ring** tracing the edge of the screen, which works at any aspect ratio
 - **Screen wake lock**, so the display does not sleep mid-talk
-- **Shareable links** — the URL always describes the current setup
+- **Shareable links** — "Copy shareable link" in Settings builds a link describing the exact
+  setup; the address bar itself never rewrites itself as you use the app
 - **Offline** once loaded, and installable as an app
 
 ## Keyboard
@@ -54,17 +55,20 @@ give them — a 320px phone or an 8K wall.
 
 ## Sharing a setup
 
-The address bar always reflects the current timer, so you can bookmark or send it:
+The address bar deliberately stays put as you use the app — it does not rewrite itself on
+every change. To send someone the exact setup, use "Copy shareable link" in Settings, which
+builds a link like:
 
 ```
 https://nikil-srinivasan.github.io/fullscreen-timer/#m=cd&d=900&h=5&t=dark
 ```
 
 `m` mode (`cd`/`sw`) · `d` length in seconds · `h` hide interval · `t` theme ·
-`r` reveal seconds · `s` sound · `rp` repeat · `rg` ring · `wk` wake lock · `ck` clock.
+`r` reveal seconds · `s` sound · `rg` ring · `wk` wake lock · `ck` clock.
 
 A link always wins over saved preferences, so a shared timer opens the same way for
-everyone.
+everyone. Opening the plain URL instead just restores your own last-used settings, saved
+locally in the browser.
 
 ## Running it locally
 

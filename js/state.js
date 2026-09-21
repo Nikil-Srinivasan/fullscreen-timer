@@ -31,7 +31,6 @@ export const DEFAULTS = Object.freeze({
   hide: 'off',         // 'off' | '1' | '5'  (reveal interval in minutes)
   revealMs: 5_000,     // how long the flash lasts
   sound: true,
-  repeat: false,       // keep beeping after zero
   ring: true,
   wake: true,          // screen wake lock while running
   showClock: false,    // time of day in the corner
@@ -74,7 +73,6 @@ function sanitise(raw) {
   out.revealMs = clamp(Math.round(num(raw.revealMs, DEFAULTS.revealMs)), 1_000, 30_000);
 
   out.sound = bool(raw.sound, DEFAULTS.sound);
-  out.repeat = bool(raw.repeat, DEFAULTS.repeat);
   out.ring = bool(raw.ring, DEFAULTS.ring);
   out.wake = bool(raw.wake, DEFAULTS.wake);
   out.showClock = bool(raw.showClock, DEFAULTS.showClock);
@@ -118,7 +116,6 @@ function readHash() {
   if (p.has('h')) raw.hide = p.get('h');
   if (p.has('r')) raw.revealMs = num(p.get('r'), 5) * 1000;
   if (p.has('s')) raw.sound = p.get('s');
-  if (p.has('rp')) raw.repeat = p.get('rp');
   if (p.has('rg')) raw.ring = p.get('rg');
   if (p.has('wk')) raw.wake = p.get('wk');
   if (p.has('ck')) raw.showClock = p.get('ck');
@@ -137,7 +134,6 @@ export function shareUrl() {
   p.set('h', state.hide);
   p.set('r', String(Math.round(state.revealMs / 1000)));
   p.set('s', state.sound ? '1' : '0');
-  p.set('rp', state.repeat ? '1' : '0');
   p.set('rg', state.ring ? '1' : '0');
   p.set('wk', state.wake ? '1' : '0');
   p.set('ck', state.showClock ? '1' : '0');

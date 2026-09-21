@@ -61,7 +61,6 @@ export const el = {
   inReveal: $('in-reveal'),
   revealValue: $('reveal-value'),
   optSound: $('opt-sound'),
-  optRepeat: $('opt-repeat'),
   optRing: $('opt-ring'),
   optWake: $('opt-wake'),
   optClock: $('opt-clock'),
@@ -226,8 +225,6 @@ export function syncPanel(settings) {
   el.revealValue.textContent = String(Math.round(settings.revealMs / 1000));
 
   el.optSound.checked = settings.sound;
-  el.optRepeat.checked = settings.repeat;
-  el.optRepeat.disabled = !settings.sound;
   el.optRing.checked = settings.ring;
   el.optWake.checked = settings.wake;
   el.optClock.checked = settings.showClock;

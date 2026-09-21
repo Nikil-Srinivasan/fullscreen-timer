@@ -140,7 +140,7 @@ function onTick(elapsedMs, running) {
 }
 
 function handleZero() {
-  if (settings.sound) sound.alarm({ repeat: settings.repeat });
+  if (settings.sound) sound.alarm();
   if (navigator.vibrate) {
     try {
       navigator.vibrate([180, 90, 180]);
@@ -174,7 +174,6 @@ function syncStartEnabled() {
 /** Stop the clock and clear run state, without touching what's configured to run next —
     used where a reset is incidental (switching mode, loading a shared link), not requested. */
 function resetClock() {
-  sound.stop();
   clock.reset();
   hide.reset();
   zeroReached = false;
@@ -196,7 +195,6 @@ const actions = {
     if (settings.mode === 'countdown' && settings.durationMs === 0) return;
 
     sound.unlock();
-    sound.stop();
 
     const wasRunning = clock.running;
     clock.toggle();
@@ -248,7 +246,6 @@ const actions = {
   toggleSound() {
     const on = !settings.sound;
     store.set({ sound: on });
-    if (!on) sound.stop();
     ui.toast(on ? 'Alarm on' : 'Alarm muted');
   },
 
@@ -354,23 +351,8 @@ store.subscribe((next, changed) => {
   if (changed.includes('wake')) syncWakeLock();
   if (changed.includes('hide')) hide.reset();
 
-  scheduleHashUpdate();
   clock.emit();
 });
-
-/* Keep the address bar in step, so the page can always be bookmarked as-is.
-   replaceState avoids filling the back button with every slider nudge. */
-let hashTimer = 0;
-function scheduleHashUpdate() {
-  clearTimeout(hashTimer);
-  hashTimer = setTimeout(() => {
-    try {
-      history.replaceState(null, '', store.shareUrl());
-    } catch {
-      /* file:// and some embeds disallow it */
-    }
-  }, 600);
-}
 
 /* --- Idle chrome -------------------------------------------------------- */
 
@@ -496,7 +478,6 @@ el.inReveal.addEventListener('input', () => {
 });
 
 el.optSound.addEventListener('change', () => store.set({ sound: el.optSound.checked }));
-el.optRepeat.addEventListener('change', () => store.set({ repeat: el.optRepeat.checked }));
 el.optRing.addEventListener('change', () => store.set({ ring: el.optRing.checked }));
 el.optWake.addEventListener('change', () => store.set({ wake: el.optWake.checked }));
 el.optClock.addEventListener('change', () => store.set({ showClock: el.optClock.checked }));
@@ -526,9 +507,11 @@ document.getElementById('btn-share').addEventListener('click', async () => {
     await navigator.clipboard.writeText(url);
     ui.toast('Link copied');
   } catch {
-    // Clipboard needs a secure context and permission; the URL bar already
-    // holds the same link, so point at that instead of failing silently.
-    ui.toast('Copy the address bar — it holds this setup', 3_500);
+    // Clipboard needs a secure context and permission, and the address bar
+    // no longer doubles as a fallback copy source (it deliberately stays put
+    // instead of rewriting itself on every change), so there is nothing left
+    // to point at but trying again.
+    ui.toast('Could not copy — check clipboard permissions and try again', 3_500);
   }
 });
 
@@ -565,7 +548,6 @@ document.addEventListener('visibilitychange', () => {
 
 window.addEventListener('pagehide', () => {
   releaseWakeLock();
-  sound.stop();
 });
 
 bindKeyboard(actions);
