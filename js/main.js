@@ -380,6 +380,21 @@ setInterval(updateClockBadge, 15_000);
 
 /* --- DOM events --------------------------------------------------------- */
 
+// A mouse or touch click leaves a button focused, and keyboard.js
+// deliberately defers to a focused button on Space/Enter (so Tab-then-Space
+// still activates it) — without this, clicking any button with the mouse
+// (Reset, Hide, Theme, ...) would silently hijack every later press of the
+// Space bar into re-clicking that button instead of toggling Start/Pause.
+// event.detail is 0 for a keyboard- or script-triggered click and a
+// nonzero click count for a real pointer click, which is exactly the
+// distinction needed: blur after a mouse/touch click, but leave focus alone
+// for someone who tabbed to a button on purpose and pressed Space or Enter.
+document.addEventListener('click', (event) => {
+  if (event.detail === 0) return;
+  const button = event.target instanceof HTMLElement && event.target.closest('button');
+  if (button) button.blur();
+});
+
 el.btnStart.addEventListener('click', actions.toggleStart);
 el.btnReset.addEventListener('click', actions.reset);
 el.btnHide.addEventListener('click', actions.cycleHide);
