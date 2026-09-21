@@ -3,6 +3,30 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script>
+  // Runs synchronously, before the CSS below is applied for the first paint.
+  // Without this, the page always paints once with the static data-theme="auto"
+  // above — which the dark-mode media query matches on a dark OS — and only
+  // then does js/main.js (a deferred module, so it runs after this already
+  // painted) read the real saved/shared theme and correct it, producing a
+  // visible dark-then-light flash for anyone whose OS is dark but who chose
+  // light. Mirrors state.js's own precedence: URL hash wins over storage.
+  (function () {
+    try {
+      var theme = 'auto';
+      var stored = JSON.parse(localStorage.getItem('fullscreen-timer/v1'));
+      if (stored && ['auto', 'light', 'dark'].indexOf(stored.theme) !== -1) theme = stored.theme;
+      var hash = location.hash.replace(/^#/, '');
+      if (hash) {
+        var t = new URLSearchParams(hash).get('t');
+        if (['auto', 'light', 'dark'].indexOf(t) !== -1) theme = t;
+      }
+      document.documentElement.dataset.theme = theme;
+    } catch {
+      /* localStorage disabled or corrupt — the "auto" already in the markup is fine */
+    }
+  })();
+</script>
 <title>Fullscreen Timer — Big Countdown &amp; Stopwatch for Presentations</title>
 <meta name="description" content="A free fullscreen countdown timer and stopwatch with digits that scale to fill any screen, from a phone to a projector. Hide the timer and flash the time every minute.">
 <link rel="canonical" href="https://nikil-srinivasan.github.io/fullscreen-timer/">
@@ -49,7 +73,6 @@
     "Hide the timer and flash the time every 1 or 5 minutes",
     "Dark and light themes",
     "Warning colours and an alarm at zero",
-    "Overtime counting past zero",
     "Keyboard shortcuts and scroll-wheel editing",
     "Works offline"
   ]
@@ -58,6 +81,7 @@
 <link rel="stylesheet" href="css/tokens.css">
 <link rel="stylesheet" href="css/layout.css">
 <link rel="stylesheet" href="css/components.css">
+<noscript><style>.app { visibility: visible !important; }</style></noscript>
 </head>
 <body>
 
@@ -72,22 +96,29 @@
   </svg>
 
   <header class="topbar" id="topbar">
-    <div class="topbar__side">
-      <span class="badge" id="mode-badge">Countdown</span>
-      <span class="badge badge--muted" id="hide-badge" hidden>Hidden</span>
-    </div>
+    <div class="topbar__side"></div>
     <div class="topbar__side topbar__side--end">
       <span class="badge badge--muted" id="clock-badge" title="Time of day" hidden></span>
     </div>
   </header>
 
   <main class="stage" id="stage">
-    <button class="stage__hit" id="stage-hit" type="button" aria-label="Start or pause the timer"></button>
+    <button class="stage__hit" id="stage-hit" type="button" aria-label="Reveal the hidden timer" tabindex="-1"></button>
     <svg class="digits" id="digits" viewBox="0 0 400 100" preserveAspectRatio="xMidYMid meet"
-         role="img" aria-labelledby="digits-label">
-      <title id="digits-label">Timer</title>
-      <text class="digits__text" id="digits-text" x="0" y="0"
-            text-anchor="middle" dominant-baseline="central">00:00</text>
+         role="img" aria-label="Timer">
+      <!-- x/y sit at the centre of the placeholder viewBox above, not (0,0) —
+           with text-anchor="middle" that's what keeps the very first paint,
+           before js/display.js measures the real text and refits the
+           viewBox, already centred instead of hanging off the top-left
+           corner. -->
+      <text class="digits__text" id="digits-text" x="200" y="50"
+            text-anchor="middle" dominant-baseline="central"
+            ><tspan id="digit-hours" class="digits__seg" data-unit="hours">0</tspan
+            ><tspan id="digit-hoursep" class="digits__sep">:</tspan
+            ><tspan id="digit-minutes" class="digits__seg" data-unit="minutes">5</tspan
+            ><tspan class="digits__sep">:</tspan
+            ><tspan id="digit-seconds" class="digits__seg" data-unit="seconds">00</tspan
+      ></text>
     </svg>
     <div class="pulse" id="pulse" aria-hidden="true" hidden></div>
     <p class="live" id="live" role="status" aria-live="polite"></p>
@@ -104,10 +135,10 @@
       <span class="btn__label">Reset</span>
     </button>
 
-    <button class="btn" id="btn-mode" type="button" title="Switch countdown / stopwatch (S)">
-      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7h9V4l5 4.5L16 13v-3H7zM17 17H8v3l-5-4.5L8 11v3h9z"/></svg>
-      <span class="btn__label" id="mode-label">Stopwatch</span>
-    </button>
+    <div class="segmented segmented--mode" role="radiogroup" aria-label="Timer mode" title="Switch countdown / stopwatch (S)">
+      <button class="segmented__opt" type="button" role="radio" data-mode="countdown" aria-checked="true">Countdown</button>
+      <button class="segmented__opt" type="button" role="radio" data-mode="stopwatch" aria-checked="false">Stopwatch</button>
+    </div>
 
     <button class="btn" id="btn-hide" type="button" title="Hide the timer, reveal periodically (H)">
       <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path id="hide-icon-path" d="M12 5c5 0 9 4.5 9 7s-4 7-9 7-9-4.5-9-7 4-7 9-7zm0 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8z"/></svg>
@@ -185,26 +216,11 @@
         </label>
       </section>
 
-      <section class="group" id="group-warnings">
-        <h3 class="group__title">Warning colours</h3>
-        <label class="field field--row">
-          <span class="field__label">Amber under</span>
-          <input class="input input--sm" id="in-warn" type="number" min="0" max="3600" step="5" inputmode="numeric" value="120">
-          <span class="field__unit">s</span>
-        </label>
-        <label class="field field--row">
-          <span class="field__label">Red under</span>
-          <input class="input input--sm" id="in-danger" type="number" min="0" max="3600" step="5" inputmode="numeric" value="30">
-          <span class="field__unit">s</span>
-        </label>
-      </section>
-
       <section class="group">
         <h3 class="group__title">Options</h3>
         <label class="check"><input type="checkbox" id="opt-sound"><span>Alarm sound when the countdown hits zero</span></label>
         <label class="check"><input type="checkbox" id="opt-repeat"><span>Keep beeping until I stop it</span></label>
         <label class="check"><input type="checkbox" id="opt-ring"><span>Show the progress ring</span></label>
-        <label class="check"><input type="checkbox" id="opt-overtime"><span>Count up past zero (overtime)</span></label>
         <label class="check"><input type="checkbox" id="opt-wake"><span>Keep the screen awake while running</span></label>
         <label class="check"><input type="checkbox" id="opt-clock"><span>Show the time of day</span></label>
       </section>
@@ -244,28 +260,32 @@
         <div class="keys__row"><dt><kbd>H</kbd></dt><dd>Cycle hide mode: off, 1 min, 5 min</dd></div>
         <div class="keys__row"><dt><kbd>T</kbd></dt><dd>Theme: auto, light, dark</dd></div>
         <div class="keys__row"><dt><kbd>M</kbd></dt><dd>Mute / unmute the alarm</dd></div>
-        <div class="keys__row"><dt><kbd>&larr;</kbd> <kbd>&rarr;</kbd></dt><dd>Countdown by one minute</dd></div>
-        <div class="keys__row"><dt><kbd>&darr;</kbd> <kbd>&uarr;</kbd></dt><dd>Countdown by ten seconds</dd></div>
-        <div class="keys__row"><dt><kbd>Shift</kbd> and arrows</dt><dd>Ten times the step</dd></div>
-        <div class="keys__row"><dt>Scroll wheel</dt><dd>Countdown by ten seconds (<kbd>Shift</kbd> for a minute)</dd></div>
+        <div class="keys__row"><dt><kbd>&larr;</kbd> <kbd>&rarr;</kbd> <kbd>&darr;</kbd> <kbd>&uarr;</kbd></dt><dd>Adjust the selected unit</dd></div>
+        <div class="keys__row"><dt>Scroll wheel</dt><dd>Adjust the selected unit</dd></div>
         <div class="keys__row"><dt><kbd>1</kbd> &hellip; <kbd>9</kbd></dt><dd>Jump to a preset length</dd></div>
         <div class="keys__row"><dt><kbd>,</kbd></dt><dd>Open settings</dd></div>
         <div class="keys__row"><dt><kbd>?</kbd></dt><dd>This list</dd></div>
         <div class="keys__row"><dt><kbd>Esc</kbd></dt><dd>Close panels, or leave fullscreen</dd></div>
       </dl>
-      <p class="help__note">Tap or click the big digits to start and pause, and scroll over them to change the
-        length — it works while the timer is running. While the timer is hidden, a tap peeks at the time
-        without changing anything.</p>
+      <p class="help__note">Click the hour, minute or second digits to choose which one arrow keys and the
+        scroll wheel change — the click never starts or pauses the clock. Start and pause always go through
+        the Start button or <kbd>Space</kbd>. The length can only be changed while paused; pause first if
+        the countdown is running. While the timer is hidden, a tap peeks at the time without changing
+        anything.</p>
     </div>
   </div>
 
   <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
   <div class="scrim" id="scrim" hidden></div>
 
-  <a class="scrolldown" href="#about">About &amp; FAQ <span aria-hidden="true">&darr;</span></a>
+  <a class="scrolldown" id="about-link" href="#about" aria-expanded="false" aria-controls="about">About &amp; FAQ <span class="scrolldown__arrow" id="about-arrow" aria-hidden="true">&darr;</span></a>
 </div>
 
-<article class="content" id="about">
+<!-- Hidden until the link above is clicked (see main.js) — not removed, so it stays
+     real content for search engines: a disclosure a visitor has to click to read is
+     ordinary, well-supported UX, and Google documents indexing it the same as
+     visible text. It just does not need to sit on screen for every visitor. -->
+<article class="content" id="about" hidden>
 
   <h2>A timer you can read from the back of the room</h2>
   <p>
@@ -279,15 +299,16 @@
   <h2>Countdown or stopwatch</h2>
   <p>
     Set a countdown when you have a fixed slot: a conference talk, a lightning round, an exam, a
-    workshop exercise. Type the length, pick one of the presets, or hold an arrow key. Once it is
-    running you can still add or remove time without stopping the clock — useful when a session
-    overruns and you decide to give it two more minutes. Switch to stopwatch mode when you want to
-    know how long something actually took.
+    workshop exercise. Type the length, pick one of the presets, or click an hour, minute or second
+    digit and turn the scroll wheel or an arrow key. Pause it to change the length — a running
+    countdown holds still until you do, so a stray scroll mid-talk cannot change the schedule.
+    Switch to stopwatch mode when you want to know how long something actually took.
   </p>
   <p>
-    When a countdown reaches zero it keeps going, counting up with a minus sign, so you always know
-    how far over you are rather than just that you are over. Before that, the digits turn amber and
-    then red at thresholds you set, so the room gets a warning without anyone having to say anything.
+    A countdown stops itself the moment it reaches zero — it never carries on into negative time, so
+    the room sees a clean stop rather than a running tally of overrun. Before that, the digits turn
+    amber for the last 50% of the countdown and red for the final 15%, so the warning scales with the
+    length of the slot, without anyone having to say anything.
   </p>
 
   <h2>Hide the timer and glance instead of stare</h2>
@@ -306,7 +327,7 @@
     <li><strong>Dark and light themes</strong>, following your system by default — dark for a darkened room, light for a bright one.</li>
     <li><strong>It works offline</strong> once loaded, which matters on conference wifi.</li>
     <li><strong>Shareable links</strong>: the address bar always describes the current timer, so you can send a colleague the exact setup.</li>
-    <li><strong>Keyboard and scroll wheel</strong>: space to start, <kbd>R</kbd> to reset, arrows or the wheel to change the length.</li>
+    <li><strong>Keyboard and scroll wheel</strong>: space to start, <kbd>R</kbd> to reset, click an hour, minute or second digit to choose what arrows or the wheel change.</li>
   </ul>
 
   <h2>Questions</h2>

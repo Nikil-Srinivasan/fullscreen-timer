@@ -5,51 +5,44 @@
 const pad = (n) => String(n).padStart(2, '0');
 
 /**
- * Format a duration for the big display.
+ * Split a duration into the pieces the big display renders as separately
+ * clickable hour / minute / second groups.
  *
  * Countdown rounds up, so a five minute timer reads "5:00" for its whole first
  * second and reaches "0:00" exactly as it expires. Stopwatch rounds down, so it
  * reads "0:00" for its first second — which is what a stopwatch should do.
  *
- * @param {number} ms       signed milliseconds; negative means overtime
+ * The leading unit is never zero-padded ("5:00", not "05:00"); every unit
+ * after it is, same as a clock face.
+ *
+ * Negative input is clamped to zero, not signed — a countdown always stops
+ * itself at zero (see main.js), and a stopwatch never runs backwards, so
+ * there is no legitimate way to reach this with a negative value. Clamping
+ * here as well means there is nowhere left in the app that could show one.
+ *
+ * @param {number} ms       milliseconds remaining/elapsed
  * @param {boolean} roundUp true for countdown
  */
+export function splitDisplay(ms, roundUp = true) {
+  const totalSeconds = roundUp ? Math.ceil(Math.max(0, ms) / 1000) : Math.floor(Math.max(0, ms) / 1000);
+
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  const showHours = hours > 0;
+
+  return {
+    showHours,
+    hours: showHours ? String(hours) : '',
+    minutes: showHours ? pad(minutes) : String(minutes),
+    seconds: pad(seconds),
+  };
+}
+
+/** Format a duration for the big display as one string (title bar, announcements). */
 export function formatTime(ms, roundUp = true) {
-  const negative = ms < 0;
-  const abs = Math.abs(ms);
-  const totalSeconds = negative || !roundUp
-    ? Math.floor(abs / 1000)
-    : Math.ceil(abs / 1000);
-
-  const hours = Math.floor(totalSeconds / 3600);
-  const minutes = Math.floor((totalSeconds % 3600) / 60);
-  const seconds = totalSeconds % 60;
-
-  const body = hours > 0
-    ? `${hours}:${pad(minutes)}:${pad(seconds)}`
-    : `${minutes}:${pad(seconds)}`;
-
-  // No sign at the exact moment of zero — "-0:00" looks like a glitch.
-  return negative && totalSeconds > 0 ? `−${body}` : body;
-}
-
-/** A shape key like "0:00" that changes only when the layout changes. */
-export function formatSignature(text) {
-  return text.replace(/\d/g, '0');
-}
-
-/** "1 min", "1 h 30 min" — used on preset chips and in announcements. */
-export function describeDuration(ms) {
-  const totalSeconds = Math.round(ms / 1000);
-  const hours = Math.floor(totalSeconds / 3600);
-  const minutes = Math.floor((totalSeconds % 3600) / 60);
-  const seconds = totalSeconds % 60;
-
-  const parts = [];
-  if (hours) parts.push(`${hours} h`);
-  if (minutes) parts.push(`${minutes} min`);
-  if (seconds || !parts.length) parts.push(`${seconds} s`);
-  return parts.join(' ');
+  const { showHours, hours, minutes, seconds } = splitDisplay(ms, roundUp);
+  return showHours ? `${hours}:${minutes}:${seconds}` : `${minutes}:${seconds}`;
 }
 
 /** Local time of day, without seconds. */

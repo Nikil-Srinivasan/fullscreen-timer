@@ -11,6 +11,18 @@ const STORAGE_KEY = 'fullscreen-timer/v1';
 export const PRESET_MINUTES = [1, 3, 5, 10, 15, 20, 30, 45, 60];
 
 export const MAX_DURATION_MS = 99 * 3600_000 + 59 * 60_000 + 59_000; // 99:59:59
+// Zero is a valid length — Reset clears the countdown to zero, the same as a
+// stopwatch clears to zero. What stops a zero-length countdown from firing
+// instantly is the Start button being disabled while there is nothing to run.
+export const MIN_DURATION_MS = 0;
+
+// Tone bands as a fraction of the *original* countdown length, not a fixed
+// number of seconds — a 10 minute talk and a 3 hour exam should both start
+// turning amber at "60% left", not at the same absolute mark. Not user
+// configurable: two numbers are not worth a settings section, and this keeps
+// every countdown legible without anyone having to tune it first.
+export const DANGER_FRACTION = 0.15; // red for the final 15% remaining
+export const WARN_FRACTION = 0.50;   // amber for the 35% before that (a 35%-wide band, not a 35% cumulative mark)
 
 export const DEFAULTS = Object.freeze({
   mode: 'countdown',   // 'countdown' | 'stopwatch'
@@ -18,12 +30,9 @@ export const DEFAULTS = Object.freeze({
   theme: 'auto',       // 'auto' | 'light' | 'dark'
   hide: 'off',         // 'off' | '1' | '5'  (reveal interval in minutes)
   revealMs: 5_000,     // how long the flash lasts
-  warnMs: 120_000,     // amber below this much remaining
-  dangerMs: 30_000,    // red below this much remaining
   sound: true,
   repeat: false,       // keep beeping after zero
   ring: true,
-  overtime: true,      // keep counting past zero
   wake: true,          // screen wake lock while running
   showClock: false,    // time of day in the corner
 });
@@ -59,17 +68,14 @@ function sanitise(raw) {
 
   out.durationMs = clamp(
     Math.round(num(raw.durationMs, DEFAULTS.durationMs) / 1000) * 1000,
-    0,
+    MIN_DURATION_MS,
     MAX_DURATION_MS,
   );
   out.revealMs = clamp(Math.round(num(raw.revealMs, DEFAULTS.revealMs)), 1_000, 30_000);
-  out.warnMs = clamp(Math.round(num(raw.warnMs, DEFAULTS.warnMs)), 0, 3_600_000);
-  out.dangerMs = clamp(Math.round(num(raw.dangerMs, DEFAULTS.dangerMs)), 0, 3_600_000);
 
   out.sound = bool(raw.sound, DEFAULTS.sound);
   out.repeat = bool(raw.repeat, DEFAULTS.repeat);
   out.ring = bool(raw.ring, DEFAULTS.ring);
-  out.overtime = bool(raw.overtime, DEFAULTS.overtime);
   out.wake = bool(raw.wake, DEFAULTS.wake);
   out.showClock = bool(raw.showClock, DEFAULTS.showClock);
 
@@ -111,12 +117,9 @@ function readHash() {
   if (p.has('t')) raw.theme = p.get('t');
   if (p.has('h')) raw.hide = p.get('h');
   if (p.has('r')) raw.revealMs = num(p.get('r'), 5) * 1000;
-  if (p.has('w')) raw.warnMs = num(p.get('w'), 120) * 1000;
-  if (p.has('g')) raw.dangerMs = num(p.get('g'), 30) * 1000;
   if (p.has('s')) raw.sound = p.get('s');
   if (p.has('rp')) raw.repeat = p.get('rp');
   if (p.has('rg')) raw.ring = p.get('rg');
-  if (p.has('ot')) raw.overtime = p.get('ot');
   if (p.has('wk')) raw.wake = p.get('wk');
   if (p.has('ck')) raw.showClock = p.get('ck');
 
@@ -133,12 +136,9 @@ export function shareUrl() {
   p.set('t', state.theme);
   p.set('h', state.hide);
   p.set('r', String(Math.round(state.revealMs / 1000)));
-  p.set('w', String(Math.round(state.warnMs / 1000)));
-  p.set('g', String(Math.round(state.dangerMs / 1000)));
   p.set('s', state.sound ? '1' : '0');
   p.set('rp', state.repeat ? '1' : '0');
   p.set('rg', state.ring ? '1' : '0');
-  p.set('ot', state.overtime ? '1' : '0');
   p.set('wk', state.wake ? '1' : '0');
   p.set('ck', state.showClock ? '1' : '0');
   return `${location.origin}${location.pathname}#${p.toString()}`;

@@ -16,23 +16,26 @@
   --surface: #ffffff;
   --surface-2: #eef1f6;
   --border: #d8dee8;
-  --text: #0f141c;
-  --text-muted: #5a6472;
+  --text: #101828;
+  --text-muted: #475569;
 
-  /* Accents */
+  /* Accents. The warn/danger/ok trio is deliberately more saturated than a
+     typical "safe" light-mode palette — they only ever colour the giant
+     digits and the ring, never small text, so vividness matters more than
+     squeezing out extra contrast headroom nobody needs at that size. */
   --accent: #2563eb;
   --accent-contrast: #ffffff;
-  --warn: #b45309;
-  --danger: #d32338;
-  --ok: #128a5a;
+  --warn: #d97706;
+  --danger: #dc2626;
+  --ok: #059669;
 
   /* The digits, and the progress ring */
   --digit: var(--text);
-  --ring-track: rgba(15, 20, 28, 0.10);
+  --ring-track: rgba(16, 24, 40, 0.10);
   --ring-progress: var(--accent);
 
-  --shadow: 0 1.2rem 3rem rgba(15, 20, 28, 0.16);
-  --scrim: rgba(15, 20, 28, 0.32);
+  --shadow: 0 1.2rem 3rem rgba(16, 24, 40, 0.16);
+  --scrim: rgba(16, 24, 40, 0.32);
 
   /* Rhythm */
   --gap: 0.6rem;

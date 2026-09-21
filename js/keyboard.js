@@ -1,14 +1,13 @@
 /* ---------------------------------------------------------------------------
    keyboard.js — shortcuts.
 
-   Two things worth knowing:
+   Three things worth knowing:
      - Typing in the settings fields must never trigger a shortcut.
      - Space and Enter on a focused button already fire a click, so we let the
        button handle them instead of acting twice.
+     - All four arrows move by one step of whichever digit group (hours,
+       minutes, seconds) was last clicked — see actions.selectUnit in main.js.
 --------------------------------------------------------------------------- */
-
-const MINUTE = 60_000;
-const TEN_SECONDS = 10_000;
 
 function isTypingTarget(node) {
   if (!(node instanceof HTMLElement)) return false;
@@ -39,7 +38,6 @@ export function bindKeyboard(actions) {
     const onButton = event.target instanceof HTMLElement && event.target.closest('button');
     if (onButton && (key === ' ' || key === 'Enter' || key === 'Spacebar')) return;
 
-    const step = event.shiftKey ? 10 : 1;
     let handled = true;
 
     switch (key) {
@@ -71,17 +69,13 @@ export function bindKeyboard(actions) {
       case 'M':
         actions.toggleSound();
         break;
-      case 'ArrowRight':
-        actions.adjust(MINUTE * step);
-        break;
-      case 'ArrowLeft':
-        actions.adjust(-MINUTE * step);
-        break;
       case 'ArrowUp':
-        actions.adjust(TEN_SECONDS * step);
+      case 'ArrowRight':
+        actions.adjustBySelected(1);
         break;
       case 'ArrowDown':
-        actions.adjust(-TEN_SECONDS * step);
+      case 'ArrowLeft':
+        actions.adjustBySelected(-1);
         break;
       case ',':
         actions.openSettings();

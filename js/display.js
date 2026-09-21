@@ -9,13 +9,25 @@
    "1:00:00" is not), so this costs nothing per frame.
 --------------------------------------------------------------------------- */
 
-import { formatSignature } from './format.js';
-
 /* --- Digits ------------------------------------------------------------- */
 
-export function createDigits({ svg, text }) {
-  let lastText = null;
-  let lastSignature = null;
+/**
+ * The digits are several <tspan> children of one <text> — an hours group with
+ * its separator, a minutes group, and a seconds group — so each unit is its
+ * own hit-testable element a click can land on, while the whole thing still
+ * measures and scales as a single block of text.
+ *
+ * @param {object} nodes
+ * @param {SVGSVGElement} nodes.svg
+ * @param {SVGTextElement} nodes.text
+ * @param {SVGTSpanElement} nodes.hours
+ * @param {SVGTSpanElement} nodes.hourSep
+ * @param {SVGTSpanElement} nodes.minutes
+ * @param {SVGTSpanElement} nodes.seconds
+ */
+export function createDigits({ svg, text, hours, hourSep, minutes, seconds }) {
+  let lastKey = null;
+  let lastShape = null;
 
   function refit() {
     let box;
@@ -35,14 +47,24 @@ export function createDigits({ svg, text }) {
     );
   }
 
+  /** @param value the object returned by format.js's splitDisplay() */
   function render(value) {
-    if (value === lastText) return;
-    text.textContent = value;
-    lastText = value;
+    const key = `${value.showHours}|${value.hours}|${value.minutes}|${value.seconds}`;
+    if (key === lastKey) return;
+    lastKey = key;
 
-    const signature = formatSignature(value);
-    if (signature !== lastSignature) {
-      lastSignature = signature;
+    hours.textContent = value.hours;
+    minutes.textContent = value.minutes;
+    seconds.textContent = value.seconds;
+    hours.style.display = value.showHours ? '' : 'none';
+    hourSep.style.display = value.showHours ? '' : 'none';
+
+    // Only re-measure when a group's *digit count* could have changed
+    // ("9:59" to "12:34" needs it, "9:59" to "9:58" doesn't) — that's what
+    // makes this free to call every frame.
+    const shape = `${value.showHours}|${value.hours.length}|${value.minutes.length}`;
+    if (shape !== lastShape) {
+      lastShape = shape;
       refit();
     }
   }

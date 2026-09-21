@@ -55,7 +55,8 @@ DOM measurement rather than screenshots where possible, because the browser pane
 frames while it is hidden (and `requestAnimationFrame` does not fire there at all).
 
 - Scaling with no clipping at 375×812, 768×1024, desktop, 3840×2160, 3440×1000 and 3840×1080.
-- Countdown accuracy against wall time; rollover past zero into overtime; the minus sign.
+- Countdown accuracy against wall time; auto-stop and auto-pause exactly at zero (there is no
+  overtime any more — a countdown never counts negative, by explicit request).
 - Hidden mode landing exactly on the minute boundary; tap-to-peek leaving run state untouched.
 - Reset, mode switch, theme cycle, hide cycle, presets, settings panel, light and dark.
 - Keyboard: space, `R`, arrow adjustments. Scroll-wheel editing including trackpad accumulation

@@ -65,6 +65,32 @@ body {
   transition: background var(--fade) ease;
 }
 
+/* Stays invisible (but still laid out and measurable, so display.js can fit
+   the digits via getBBox() while hidden) until main.js has applied every
+   saved setting — duration, mode, hide/sound/theme labels, everything.
+   Without this, the static markup's defaults (5:00, "Countdown", "Auto"...)
+   paint first and only then get corrected once the deferred module script
+   runs, which is exactly the reload glitch this prevents. The noscript rule
+   keeps JS-disabled visitors seeing the plain static markup instead of a
+   permanently blank page, since nothing will ever flip data-ready for them. */
+html:not([data-ready="true"]) .app {
+  visibility: hidden;
+}
+
+/* visibility (unlike display) keeps the element in the render tree, which
+   means every CSS transition below is still "live" while .app is hidden —
+   so the moment main.js corrects e.g. the mode toggle from its static
+   default (Countdown) to a saved Stopwatch, that change queues a real
+   transition, which then visibly plays out right as the page reveals: the
+   exact "toggle switches to Stopwatch" glitch this rule exists to kill.
+   Forcing transition: none while not yet ready makes every correction
+   instant, so there is nothing left to animate by the time data-ready
+   flips — normal transitions resume immediately after for real interactions. */
+html:not([data-ready="true"]) .app,
+html:not([data-ready="true"]) .app * {
+  transition: none !important;
+}
+
 /* --- Progress ring ------------------------------------------------------ */
 
 .ring {
@@ -131,6 +157,9 @@ body {
   min-width: 0;
 }
 
+/* Only does anything while the screen is blank (hidden mode): a tap there
+   reveals the time. The rest of the time it must not catch clicks meant for
+   the digit groups underneath, so it steps out of the way entirely. */
 .stage__hit {
   position: absolute;
   inset: 0;
@@ -140,6 +169,10 @@ body {
   background: transparent;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
+}
+
+.app[data-blank="false"] .stage__hit {
+  pointer-events: none;
 }
 
 .stage__hit:focus-visible {
@@ -172,6 +205,23 @@ body {
   font-weight: 600;
   letter-spacing: -0.02em;
   transition: fill var(--fade) ease;
+}
+
+/* Each unit is its own tspan so a click can land on just the hours, minutes,
+   or seconds — see js/display.js. Only reachable when the digits are visible
+   (layout.css turns off pointer-events on .stage__hit in that state). */
+.digits__seg {
+  cursor: pointer;
+}
+
+/* Only paused is editable — a running countdown holds still, so the digits
+   stop inviting a click that would not do anything. */
+.app[data-running="true"] .digits__seg {
+  cursor: default;
+}
+
+.digits__seg--selected {
+  fill: var(--accent);
 }
 
 .app[data-running="false"] .digits__text {
@@ -242,7 +292,8 @@ body {
 }
 
 /* Wheel events over the timer adjust the countdown, so the page cannot be
-   scrolled from there. This link is how you reach the article below. */
+   scrolled from there. This link is how you reveal and reach the article
+   below — see main.js, which un-hides it on click. */
 .scrolldown {
   position: relative;
   z-index: 3;

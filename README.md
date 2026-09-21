@@ -14,17 +14,21 @@ give them — a 320px phone or an 8K wall.
 
 ## Features
 
-- **Countdown or stopwatch**, switched with one button
-- **Start / pause / reset**, from a button, the spacebar, or a tap on the digits
+- **Countdown or stopwatch**, switched with a segmented toggle that shows the mode you're in
+- **Start / pause / reset**, from a button or the spacebar — clicking the digits never starts
+  or stops the clock. Reset always clears to zero, the same as a stopwatch; Start stays
+  disabled until a countdown has a length to run
 - **Fullscreen**, with the controls fading out once you stop moving the mouse
 - **Hide the timer** and let it flash the time every 1 or 5 minutes — you glance instead
   of stare. A tap peeks without disturbing the run.
 - **Dark / light / auto** theme
-- **Editable length** — hour/minute/second fields, preset chips, arrow keys, or the scroll
-  wheel over the digits, all adjustable live while the timer runs
-- **Warning colours** — amber, then red, at thresholds you choose
+- **Editable length** — hour/minute/second fields, preset chips, or arrow keys and the scroll
+  wheel over the digits. Click an hour, minute or second digit to choose which one arrows and
+  the wheel change, one unit at a time. Only while paused — a running countdown holds still.
+- **Warning colours** — amber for the last 50% of the countdown, red for the final 15%, scaled
+  to the length of the timer rather than a fixed number of seconds
 - **Alarm** at zero, synthesised in the browser (no audio files), with optional repeat
-- **Overtime** — keeps counting past zero with a minus sign
+- **Stops at zero** — a countdown never counts into negative time
 - **Progress ring** tracing the edge of the screen, which works at any aspect ratio
 - **Screen wake lock**, so the display does not sleep mid-talk
 - **Shareable links** — the URL always describes the current setup
@@ -41,10 +45,8 @@ give them — a 320px phone or an 8K wall.
 | <kbd>H</kbd> | Cycle hide mode: off, 1 min, 5 min |
 | <kbd>T</kbd> | Theme: auto, light, dark |
 | <kbd>M</kbd> | Mute / unmute the alarm |
-| <kbd>←</kbd> <kbd>→</kbd> | Countdown by one minute |
-| <kbd>↓</kbd> <kbd>↑</kbd> | Countdown by ten seconds |
-| <kbd>Shift</kbd> + arrows | Ten times the step |
-| Scroll wheel | Countdown by ten seconds, or a minute with <kbd>Shift</kbd> |
+| <kbd>←</kbd> <kbd>→</kbd> <kbd>↓</kbd> <kbd>↑</kbd> | Adjust the selected unit (click a digit group to pick hours, minutes, or seconds) |
+| Scroll wheel | Adjust the selected unit |
 | <kbd>1</kbd>–<kbd>9</kbd> | Jump to a preset length |
 | <kbd>,</kbd> | Settings |
 | <kbd>?</kbd> | Shortcuts |
@@ -59,8 +61,7 @@ https://nikil-srinivasan.github.io/fullscreen-timer/#m=cd&d=900&h=5&t=dark
 ```
 
 `m` mode (`cd`/`sw`) · `d` length in seconds · `h` hide interval · `t` theme ·
-`r` reveal seconds · `w` amber threshold · `g` red threshold · `s` sound · `rp` repeat ·
-`rg` ring · `ot` overtime · `wk` wake lock · `ck` clock.
+`r` reveal seconds · `s` sound · `rp` repeat · `rg` ring · `wk` wake lock · `ck` clock.
 
 A link always wins over saved preferences, so a shared timer opens the same way for
 everyone.

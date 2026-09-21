@@ -65,6 +65,17 @@
   outline-offset: 0.15rem;
 }
 
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btn:disabled:hover,
+.btn:disabled:active {
+  filter: none;
+  transform: none;
+}
+
 .btn--primary {
   min-width: 8rem;
   border-color: transparent;
@@ -192,6 +203,13 @@
   padding: 0.5rem 1.1rem 1.1rem;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+  /* Still scrollable if content overflows, just without a visible track —
+     a floating panel doesn't need a scrollbar drawn on top of it. */
+  scrollbar-width: none;
+}
+
+.sheet__body::-webkit-scrollbar {
+  display: none;
 }
 
 /* On a phone the sheet becomes a bottom sheet across the full width. */
@@ -269,6 +287,33 @@
   background: var(--bg-elev);
   color: var(--text);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
+}
+
+/* The mode toggle lives in the controls bar among the icon buttons, not the
+   settings sheet, so it needs to be sized against .btn rather than fill a
+   26rem-wide panel. */
+.segmented--mode {
+  min-width: 12rem;
+}
+
+/* Countdown vs stopwatch is the one segmented control worth calling out from
+   across the room — a solid accent fill reads at a glance, where the plain
+   "lighter panel" treatment other segmented controls use does not. */
+.segmented--mode .segmented__opt[aria-checked="true"] {
+  background: var(--accent);
+  color: var(--accent-contrast);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
+}
+
+@media (max-width: 34rem) {
+  .segmented--mode {
+    min-width: 9rem;
+  }
+
+  .segmented--mode .segmented__opt {
+    padding: 0.45rem 0.3rem;
+    font-size: 0.78rem;
+  }
 }
 
 .segmented__opt:focus-visible {

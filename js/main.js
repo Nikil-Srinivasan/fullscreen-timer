@@ -6,7 +6,7 @@
 --------------------------------------------------------------------------- */
 
 import * as store from './state.js';
-import { MAX_DURATION_MS, PRESET_MINUTES } from './state.js';
+import { DANGER_FRACTION, MAX_DURATION_MS, MIN_DURATION_MS, PRESET_MINUTES, WARN_FRACTION } from './state.js';
 import { createClock } from './clock.js';
 import { createDigits, createRing } from './display.js';
 import { createHideController } from './hide-mode.js';
@@ -24,18 +24,34 @@ import {
   requestWakeLock,
   toggleFullscreen,
 } from './screen.js';
-import { describeDuration, formatClock, formatTime, joinDuration } from './format.js';
+import { formatClock, formatTime, joinDuration, splitDisplay } from './format.js';
 
 const IDLE_MS = 3_000;
 
 /** The title as authored in the HTML, restored whenever the clock is idle. */
 const DOCUMENT_TITLE = document.title;
 
+/** What one wheel notch or arrow-key press changes, in whichever unit is selected. */
+const UNIT_STEP_MS = { hours: 3_600_000, minutes: 60_000, seconds: 1_000 };
+
 let settings = store.load();
 let zeroReached = false;
+let selectedUnit = 'seconds'; // which digit group the wheel and arrow keys adjust
+// Whether that selection should actually be highlighted. Separate from
+// selectedUnit itself so pressing Start can forget the highlight for the
+// rest of this run — without one, pausing (by hand or by the countdown
+// auto-stopping at zero) would resurrect whatever was clicked before Start.
+let selectionVisible = false;
 
 const clock = createClock(onTick);
-const digits = createDigits({ svg: el.digits, text: el.digitsText });
+const digits = createDigits({
+  svg: el.digits,
+  text: el.digitsText,
+  hours: el.digitHours,
+  hourSep: el.digitHourSep,
+  minutes: el.digitMinutes,
+  seconds: el.digitSeconds,
+});
 const ring = createRing({ svg: el.ring, track: el.ringTrack, progress: el.ringProgress });
 const hide = createHideController();
 const sound = createSound();
@@ -51,30 +67,52 @@ function onTick(elapsedMs, running) {
   let tone = 'normal';
 
   if (countdown) {
-    const remaining = settings.durationMs - elapsedMs;
+    const rawRemaining = settings.durationMs - elapsedMs;
+    const remaining = Math.max(0, rawRemaining);
 
-    if (remaining <= 0 && !zeroReached) {
+    // Only a live countdown can "reach" zero. Both checks require `running`:
+    // editing the length while paused can easily make durationMs dip to or
+    // below the (frozen) elapsed time for a moment — e.g. shortening a
+    // countdown you paused partway through — and that must never be read as
+    // a finish. A zero-length countdown (fresh off Reset, or before anything
+    // is dialled in) is "nothing configured" rather than "just finished"
+    // either way, which the durationMs > 0 guard covers on its own.
+    if (rawRemaining <= 0 && !zeroReached && settings.durationMs > 0 && running) {
       zeroReached = true;
       handleZero();
-    } else if (remaining > 0 && zeroReached) {
+    } else if (rawRemaining > 0 && zeroReached) {
       zeroReached = false; // time was added back on
     }
 
-    // Without overtime the clock simply stops on zero.
-    if (remaining <= 0 && !settings.overtime && running) {
-      clock.pause();
+    // The countdown always stops itself at zero — never counts negative. It
+    // does more than pause: it resets to zero exactly like the Reset button,
+    // the same instant it finishes. That guarantees there is no leftover
+    // elapsed time sitting behind the scenes that a later edit could collide
+    // with and misread as "reached zero" again (see the guard above).
+    if (rawRemaining <= 0 && running) {
+      finishCountdown();
       return;
     }
 
-    displayMs = settings.overtime ? remaining : Math.max(0, remaining);
-    displaySeconds = Math.ceil(Math.max(0, remaining) / 1000);
-    fraction = settings.durationMs > 0
-      ? Math.max(0, Math.min(1, remaining / settings.durationMs))
-      : 0;
+    displayMs = remaining;
+    displaySeconds = Math.ceil(remaining / 1000);
 
+    // Thresholds as a fraction of the *original* length, not a fixed number
+    // of seconds, so a 3 hour exam and a 3 minute round both start warning at
+    // "60% left" rather than at the same absolute mark. A zero-length
+    // countdown has no fraction of anything to be low on, so it stays the
+    // neutral tone. The colour itself is gated on `running` too — dialling a
+    // short length in while paused is not a warning, it is just what you
+    // asked for; amber/red only mean something once the clock is live.
     if (settings.durationMs > 0) {
-      if (remaining <= settings.dangerMs) tone = 'danger';
-      else if (remaining <= settings.warnMs) tone = 'warn';
+      const remainingFraction = remaining / settings.durationMs;
+      fraction = Math.max(0, Math.min(1, remainingFraction));
+      if (running) {
+        if (remainingFraction <= DANGER_FRACTION) tone = 'danger';
+        else if (remainingFraction <= WARN_FRACTION) tone = 'warn';
+      }
+    } else {
+      fraction = 0;
     }
   } else {
     displayMs = elapsedMs;
@@ -82,8 +120,7 @@ function onTick(elapsedMs, running) {
     fraction = (elapsedMs % 60_000) / 60_000; // one sweep per minute
   }
 
-  const text = formatTime(displayMs, countdown);
-  digits.render(text);
+  digits.render(splitDisplay(displayMs, countdown));
   ring.setFraction(fraction);
   ui.setTone(tone);
 
@@ -98,7 +135,7 @@ function onTick(elapsedMs, running) {
   // Prefix the tab title while running, but put the real one back when idle —
   // overwriting it with a short label would throw away the page title that
   // search results and bookmarks use.
-  const title = running ? `${text} · Fullscreen Timer` : DOCUMENT_TITLE;
+  const title = running ? `${formatTime(displayMs, countdown)} · Fullscreen Timer` : DOCUMENT_TITLE;
   if (title !== document.title) document.title = title;
 }
 
@@ -122,43 +159,73 @@ function syncWakeLock() {
   else releaseWakeLock();
 }
 
+/** The highlight only makes sense where a click could actually change something:
+    countdown mode, paused, and only for a unit clicked since the clock last started. */
+function syncSelectedUnit() {
+  const show = settings.mode === 'countdown' && !clock.running && selectionVisible;
+  ui.setSelectedUnit(show ? selectedUnit : null);
+}
+
+/** Nothing to run a zero-length countdown from — keep Start disabled until one is dialled in. */
+function syncStartEnabled() {
+  ui.setStartEnabled(!(settings.mode === 'countdown' && settings.durationMs === 0));
+}
+
+/** Stop the clock and clear run state, without touching what's configured to run next —
+    used where a reset is incidental (switching mode, loading a shared link), not requested. */
+function resetClock() {
+  sound.stop();
+  clock.reset();
+  hide.reset();
+  zeroReached = false;
+  ui.setStartButton(false);
+  syncWakeLock();
+  syncSelectedUnit();
+}
+
+/** A countdown reaching zero behaves exactly like pressing Reset — clock and
+    length both back to zero — not just a pause. See onTick for why. */
+function finishCountdown() {
+  resetClock();
+  if (settings.durationMs !== 0) store.set({ durationMs: 0 });
+}
+
 const actions = {
   toggleStart() {
+    // Disabled in the DOM, but Space bypasses that — refuse the same way.
+    if (settings.mode === 'countdown' && settings.durationMs === 0) return;
+
     sound.unlock();
     sound.stop();
 
-    // Pressing start on an expired countdown starts it again from the top.
-    if (!clock.running && settings.mode === 'countdown' && clock.elapsed >= settings.durationMs) {
-      clock.reset();
-      hide.reset();
-      zeroReached = false;
-    }
-
+    const wasRunning = clock.running;
     clock.toggle();
+
+    // Starting (not pausing): forget which digit was selected, so this run
+    // — however it ends, by hand or by reaching zero — does not resurrect a
+    // highlight from before Start was pressed.
+    if (!wasRunning && clock.running) selectionVisible = false;
+
     ui.setStartButton(clock.running);
     syncWakeLock();
+    syncSelectedUnit();
     ui.announce(clock.running ? 'Started' : 'Paused');
   },
 
+  /** The Reset button/key: clears the clock, and — like a stopwatch clearing to
+      zero — clears a countdown's length back to zero too, ready to dial in fresh. */
   reset() {
-    sound.stop();
-    clock.reset();
-    hide.reset();
-    zeroReached = false;
-    ui.setStartButton(false);
-    syncWakeLock();
+    resetClock();
+    if (settings.mode === 'countdown' && settings.durationMs !== 0) {
+      store.set({ durationMs: 0 });
+    }
     ui.announce('Reset');
   },
 
   toggleMode() {
     const mode = settings.mode === 'countdown' ? 'stopwatch' : 'countdown';
-    sound.stop();
-    clock.reset();
-    hide.reset();
-    zeroReached = false;
+    resetClock();
     store.set({ mode });
-    ui.setStartButton(false);
-    syncWakeLock();
   },
 
   setMode(mode) {
@@ -192,16 +259,35 @@ const actions = {
     });
   },
 
-  /** Arrow keys: add or remove countdown time, live if it is running. */
+  /** Add or remove countdown time. Only while paused — a running countdown is not editable. */
   adjust(deltaMs) {
     if (settings.mode !== 'countdown') {
       ui.toast('Switch to countdown to set a length');
       return;
     }
-    const next = Math.min(MAX_DURATION_MS, Math.max(0, settings.durationMs + deltaMs));
+    if (clock.running) return;
+    const next = Math.min(MAX_DURATION_MS, Math.max(MIN_DURATION_MS, settings.durationMs + deltaMs));
     if (next === settings.durationMs) return;
     store.set({ durationMs: next });
-    ui.toast(describeDuration(next));
+  },
+
+  /** Click an hour/minute/second digit: choose what the wheel and arrows change.
+      Only while paused — nothing is editable while the countdown is running. */
+  selectUnit(unit) {
+    if (!(unit in UNIT_STEP_MS) || clock.running) return;
+    if (settings.mode !== 'countdown') {
+      ui.toast('Switch to countdown to set a length');
+      return;
+    }
+    selectedUnit = unit;
+    selectionVisible = true;
+    syncSelectedUnit();
+    ui.announce(`Adjusting ${unit}`);
+  },
+
+  /** Wheel notches or arrow-key presses: `steps` units of whichever is selected. */
+  adjustBySelected(steps) {
+    actions.adjust(steps * UNIT_STEP_MS[selectedUnit]);
   },
 
   preset(index) {
@@ -210,15 +296,15 @@ const actions = {
     actions.setDuration(minutes * 60_000);
   },
 
+  /** Presets and the duration fields: only while paused, same as adjust(). */
   setDuration(ms) {
+    if (clock.running) return;
     const patch = { durationMs: ms };
     if (settings.mode !== 'countdown') patch.mode = 'countdown';
     store.set(patch);
-    if (!clock.running) {
-      clock.reset();
-      hide.reset();
-      zeroReached = false;
-    }
+    clock.reset();
+    hide.reset();
+    zeroReached = false;
   },
 
   openSettings() {
@@ -255,13 +341,15 @@ store.subscribe((next, changed) => {
   settings = next;
 
   applyTheme(settings.theme);
-  ui.setModeUI(settings.mode, settings.durationMs);
+  ui.setModeUI(settings.mode);
   ui.setHideUI(settings.hide);
   ui.setThemeUI(settings.theme);
   ui.setSoundUI(settings.sound);
   ui.setRingVisible(settings.ring);
   ui.syncPanel(settings);
   updateClockBadge();
+  syncSelectedUnit();
+  syncStartEnabled();
 
   if (changed.includes('wake')) syncWakeLock();
   if (changed.includes('hide')) hide.reset();
@@ -312,7 +400,6 @@ setInterval(updateClockBadge, 15_000);
 
 el.btnStart.addEventListener('click', actions.toggleStart);
 el.btnReset.addEventListener('click', actions.reset);
-el.btnMode.addEventListener('click', actions.toggleMode);
 el.btnHide.addEventListener('click', actions.cycleHide);
 el.btnTheme.addEventListener('click', actions.cycleTheme);
 el.btnSound.addEventListener('click', actions.toggleSound);
@@ -323,22 +410,32 @@ el.settingsClose.addEventListener('click', ui.closeSheets);
 el.helpClose.addEventListener('click', ui.closeSheets);
 el.scrim.addEventListener('click', ui.closeSheets);
 
+// Only reachable while the screen is blank (layout.css turns off pointer
+// events on it otherwise, letting clicks fall through to the digits below).
+// A tap there is purely a peek — never a start, pause, or edit.
 el.stageHit.addEventListener('click', () => {
   sound.unlock();
-  // While the screen is blank, a tap is a peek — not a start or a stop.
-  if (el.app.dataset.blank === 'true') {
-    hide.peek(settings.revealMs);
-    clock.emit();
-    return;
-  }
-  actions.toggleStart();
+  hide.peek(settings.revealMs);
+  clock.emit();
 });
 
-/* Scrolling over the timer nudges it, the same as the up and down arrows.
-   Deltas are accumulated so a trackpad's stream of tiny events steps once
-   rather than a hundred times, and normalised because browsers report wheel
-   distance in pixels, lines or pages depending on the device. */
-const WHEEL_STEP = 50;
+// Clicking a digit group chooses what the wheel and arrow keys change. The
+// click itself never starts, pauses, or resets anything — that is what the
+// Start button and Space are for.
+el.digits.addEventListener('click', (event) => {
+  const segment = event.target.closest('[data-unit]');
+  if (!segment) return;
+  sound.unlock();
+  actions.selectUnit(segment.dataset.unit);
+});
+
+/* Scrolling over the timer nudges the selected unit (hours, minutes, or
+   seconds — see actions.selectUnit), the same as the arrow keys. Deltas are
+   accumulated so a trackpad's stream of tiny events steps once rather than a
+   hundred times, and normalised because browsers report wheel distance in
+   pixels, lines or pages depending on the device. A mouse wheel notch reports
+   a deltaY of about 100px, so that is one step of one unit. */
+const WHEEL_STEP = 100;
 let wheelAccumulated = 0;
 
 el.stage.addEventListener(
@@ -357,7 +454,7 @@ el.stage.addEventListener(
     wheelAccumulated -= steps * WHEEL_STEP;
 
     // Scrolling up adds time, matching ArrowUp.
-    actions.adjust(-steps * (event.shiftKey ? 60_000 : 10_000));
+    actions.adjustBySelected(-steps);
   },
   { passive: false },
 );
@@ -384,7 +481,7 @@ function readDurationFields() {
     minutes: Number(el.inMinutes.value) || 0,
     seconds: Number(el.inSeconds.value) || 0,
   });
-  actions.setDuration(Math.min(MAX_DURATION_MS, Math.max(0, value)));
+  actions.setDuration(Math.min(MAX_DURATION_MS, Math.max(MIN_DURATION_MS, value)));
 }
 
 [el.inHours, el.inMinutes, el.inSeconds].forEach((input) => {
@@ -398,20 +495,30 @@ el.inReveal.addEventListener('input', () => {
   store.set({ revealMs: Number(el.inReveal.value) * 1000 });
 });
 
-el.inWarn.addEventListener('input', () => {
-  store.set({ warnMs: Number(el.inWarn.value) * 1000 });
-});
-
-el.inDanger.addEventListener('input', () => {
-  store.set({ dangerMs: Number(el.inDanger.value) * 1000 });
-});
-
 el.optSound.addEventListener('change', () => store.set({ sound: el.optSound.checked }));
 el.optRepeat.addEventListener('change', () => store.set({ repeat: el.optRepeat.checked }));
 el.optRing.addEventListener('change', () => store.set({ ring: el.optRing.checked }));
-el.optOvertime.addEventListener('change', () => store.set({ overtime: el.optOvertime.checked }));
 el.optWake.addEventListener('change', () => store.set({ wake: el.optWake.checked }));
 el.optClock.addEventListener('change', () => store.set({ showClock: el.optClock.checked }));
+
+// The About & FAQ article starts `hidden` (see index.html) so it isn't dead
+// weight on every visit; the link show/hides it, scrolling to it on the way
+// in. A real anchor href is kept for semantics, but native navigation is
+// intercepted — letting the browser change location.hash itself would fire
+// the shared-link hashchange listener below and wrongly reset the clock just
+// because someone wanted to read the FAQ.
+const aboutLink = document.getElementById('about-link');
+const aboutArrow = document.getElementById('about-arrow');
+const about = document.getElementById('about');
+
+aboutLink.addEventListener('click', (event) => {
+  event.preventDefault();
+  const opening = about.hidden;
+  about.hidden = !opening;
+  aboutLink.setAttribute('aria-expanded', opening ? 'true' : 'false');
+  aboutArrow.textContent = opening ? '↑' : '↓';
+  if (opening) about.scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
 
 document.getElementById('btn-share').addEventListener('click', async () => {
   const url = store.shareUrl();
@@ -427,7 +534,7 @@ document.getElementById('btn-share').addEventListener('click', async () => {
 
 document.getElementById('btn-defaults').addEventListener('click', () => {
   store.reset();
-  actions.reset();
+  resetClock();
   ui.toast('Defaults restored');
 });
 
@@ -447,7 +554,7 @@ onSystemThemeChange(() => {
    fire this event, so anything arriving here came from outside. */
 window.addEventListener('hashchange', () => {
   store.reload();
-  actions.reset();
+  resetClock();
 });
 
 document.addEventListener('visibilitychange', () => {
@@ -465,20 +572,32 @@ bindKeyboard(actions);
 
 /* --- Start ------------------------------------------------------------- */
 
-applyTheme(settings.theme);
-ui.setModeUI(settings.mode, settings.durationMs);
-ui.setHideUI(settings.hide);
-ui.setThemeUI(settings.theme);
-ui.setSoundUI(settings.sound);
-ui.setRingVisible(settings.ring);
-ui.setFullscreenUI(isFullscreen());
-ui.setStartButton(false);
-ui.setBlank(false);
-ui.setTone('normal');
-ui.syncPanel(settings);
-updateClockBadge();
-markActive();
-clock.emit();
+// index.html/layout.css hide .app (visibility, not display, so it stays
+// measurable) until data-ready="true" lands here. That is what stops the
+// static markup's defaults — 5:00, "Countdown", "Auto" — from painting
+// before this synchronous block corrects them to whatever was saved. The
+// try/finally guarantees the reveal still happens even if something above
+// throws, so a bug here never leaves the page permanently blank.
+try {
+  applyTheme(settings.theme);
+  ui.setModeUI(settings.mode);
+  ui.setHideUI(settings.hide);
+  ui.setThemeUI(settings.theme);
+  ui.setSoundUI(settings.sound);
+  ui.setRingVisible(settings.ring);
+  ui.setFullscreenUI(isFullscreen());
+  ui.setStartButton(false);
+  ui.setBlank(false);
+  ui.setTone('normal');
+  ui.syncPanel(settings);
+  syncSelectedUnit();
+  syncStartEnabled();
+  updateClockBadge();
+  markActive();
+  clock.emit();
+} finally {
+  document.documentElement.dataset.ready = 'true';
+}
 
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
   window.addEventListener('load', () => {

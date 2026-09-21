@@ -6,7 +6,7 @@
 --------------------------------------------------------------------------- */
 
 import { PRESET_MINUTES } from './state.js';
-import { describeDuration, splitDuration } from './format.js';
+import { splitDuration } from './format.js';
 import { effectiveTheme, labelFor } from './theme.js';
 
 const $ = (id) => document.getElementById(id);
@@ -18,14 +18,16 @@ export const el = {
   ringTrack: $('ring-track'),
   ringProgress: $('ring-progress'),
 
-  modeBadge: $('mode-badge'),
-  hideBadge: $('hide-badge'),
   clockBadge: $('clock-badge'),
 
   stage: $('stage'),
   stageHit: $('stage-hit'),
   digits: $('digits'),
   digitsText: $('digits-text'),
+  digitHours: $('digit-hours'),
+  digitHourSep: $('digit-hoursep'),
+  digitMinutes: $('digit-minutes'),
+  digitSeconds: $('digit-seconds'),
   pulse: $('pulse'),
   live: $('live'),
 
@@ -34,8 +36,6 @@ export const el = {
   startIcon: $('start-icon-path'),
   startLabel: $('start-label'),
   btnReset: $('btn-reset'),
-  btnMode: $('btn-mode'),
-  modeLabel: $('mode-label'),
   btnHide: $('btn-hide'),
   hideIcon: $('hide-icon-path'),
   hideLabel: $('hide-label'),
@@ -54,19 +54,15 @@ export const el = {
   settings: $('settings'),
   settingsClose: $('settings-close'),
   groupDuration: $('group-duration'),
-  groupWarnings: $('group-warnings'),
   inHours: $('in-hours'),
   inMinutes: $('in-minutes'),
   inSeconds: $('in-seconds'),
   presets: $('presets'),
   inReveal: $('in-reveal'),
   revealValue: $('reveal-value'),
-  inWarn: $('in-warn'),
-  inDanger: $('in-danger'),
   optSound: $('opt-sound'),
   optRepeat: $('opt-repeat'),
   optRing: $('opt-ring'),
-  optOvertime: $('opt-overtime'),
   optWake: $('opt-wake'),
   optClock: $('opt-clock'),
 
@@ -105,13 +101,17 @@ export function setStartButton(running) {
   el.app.dataset.running = running ? 'true' : 'false';
 }
 
-export function setModeUI(mode, durationMs) {
+/** Nothing to run a zero-length countdown from — leaves the Start/Pause label alone. */
+export function setStartEnabled(enabled) {
+  el.btnStart.disabled = !enabled;
+}
+
+export function setModeUI(mode) {
   const countdown = mode === 'countdown';
-  el.modeBadge.textContent = countdown ? `Countdown · ${describeDuration(durationMs)}` : 'Stopwatch';
-  // The button offers the *other* mode, which is what people expect.
-  el.modeLabel.textContent = countdown ? 'Stopwatch' : 'Countdown';
   el.groupDuration.hidden = !countdown;
-  el.groupWarnings.hidden = !countdown;
+  // The segmented mode toggle in the controls bar shows the mode you're IN,
+  // not the one you'd switch to — that's the whole point of it over the old
+  // single button, which named the other mode and left people guessing.
   syncSegmented('[data-mode]', 'mode', mode);
 }
 
@@ -120,8 +120,6 @@ export function setHideUI(hide) {
   el.hideIcon.setAttribute('d', on ? ICON.eyeOff : ICON.eye);
   el.hideLabel.textContent = on ? `${hide} min` : 'Visible';
   el.btnHide.setAttribute('aria-pressed', on ? 'true' : 'false');
-  el.hideBadge.hidden = !on;
-  el.hideBadge.textContent = on ? `Hidden · every ${hide} min` : '';
   syncSegmented('[data-hide]', 'hide', hide);
 }
 
@@ -163,6 +161,15 @@ export function setIdle(idle) {
 export function setClockBadge(text) {
   el.clockBadge.hidden = !text;
   el.clockBadge.textContent = text || '';
+}
+
+const SEGMENTS = { hours: el.digitHours, minutes: el.digitMinutes, seconds: el.digitSeconds };
+
+/** Highlight whichever digit group the wheel and arrow keys currently adjust. */
+export function setSelectedUnit(unit) {
+  Object.entries(SEGMENTS).forEach(([name, node]) => {
+    node.classList.toggle('digits__seg--selected', name === unit);
+  });
 }
 
 export function announce(text) {
@@ -217,14 +224,11 @@ export function syncPanel(settings) {
 
   write(el.inReveal, Math.round(settings.revealMs / 1000));
   el.revealValue.textContent = String(Math.round(settings.revealMs / 1000));
-  write(el.inWarn, Math.round(settings.warnMs / 1000));
-  write(el.inDanger, Math.round(settings.dangerMs / 1000));
 
   el.optSound.checked = settings.sound;
   el.optRepeat.checked = settings.repeat;
   el.optRepeat.disabled = !settings.sound;
   el.optRing.checked = settings.ring;
-  el.optOvertime.checked = settings.overtime;
   el.optWake.checked = settings.wake;
   el.optClock.checked = settings.showClock;
 }
