@@ -203,13 +203,24 @@
   padding: 0.5rem 1.1rem 1.1rem;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  /* Still scrollable if content overflows, just without a visible track —
-     a floating panel doesn't need a scrollbar drawn on top of it. */
-  scrollbar-width: none;
+  /* A thin, themed scrollbar rather than none at all — with settings long
+     enough to scroll, hiding it entirely left no hint that anything sat
+     below the fold. */
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
 }
 
 .sheet__body::-webkit-scrollbar {
-  display: none;
+  width: 0.5rem;
+}
+
+.sheet__body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sheet__body::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 999px;
 }
 
 /* On a phone the sheet becomes a bottom sheet across the full width. */
@@ -523,7 +534,12 @@ kbd {
   position: absolute;
   inset: 0;
   z-index: 10;
-  background: transparent;
+  /* Was left transparent — the whole point of a scrim is to dim everything
+     behind the sheet so its edges actually read as a boundary, in either
+     theme, instead of the sheet's own (fairly close in tone) background
+     being the only thing separating it from the page. */
+  background: var(--scrim);
+  transition: opacity var(--fade) ease;
 }
 
 .scrim[hidden] {
