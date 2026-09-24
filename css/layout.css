@@ -198,6 +198,11 @@ html:not([data-ready="true"]) .app * {
   height: 100%;
   overflow: visible;
   transition: opacity var(--fade) ease;
+  /* Clicking a unit still works (that is a click handler, not a selection);
+     this only stops drag/double-click from highlighting the digits like text. */
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .digits__text {
