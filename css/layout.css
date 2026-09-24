@@ -248,7 +248,8 @@ html:not([data-ready="true"]) .app * {
 
 /* "Time's up": a countdown that just finished has already reset to 0:00, which
    alone looks the same as never started — so for a few seconds the digits go
-   red and flash, with a label (see main.js finishCountdown). */
+   red behind a lightly blurred overlay carrying a large centred label (see
+   main.js finishCountdown). */
 .app[data-finished="true"] {
   --digit: var(--danger);
   --ring-progress: var(--danger);
@@ -261,18 +262,29 @@ html:not([data-ready="true"]) .app * {
 
 .finish {
   position: absolute;
-  left: 50%;
-  bottom: 0.5rem;
+  inset: 0;
   z-index: 3;
-  transform: translateX(-50%);
-  padding: 0.35em 1em;
-  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  -webkit-backdrop-filter: blur(0.5rem);
+  backdrop-filter: blur(0.5rem);
+  pointer-events: none;
+}
+
+.finish[hidden] {
+  display: none;
+}
+
+.finish__text {
+  padding: 0.25em 0.9em;
+  border-radius: 0.3em;
   background: var(--danger);
   color: #fff;
-  font-size: clamp(1.1rem, 4vmin, 3rem);
-  font-weight: 700;
-  white-space: nowrap;
-  pointer-events: none;
+  font-size: clamp(2rem, 12vmin, 12rem);
+  font-weight: 800;
+  line-height: 1.1;
+  text-align: center;
+  box-shadow: 0 0.5rem 2.5rem rgba(0, 0, 0, 0.45);
 }
 
 @keyframes finish-flash {
