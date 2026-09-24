@@ -24,7 +24,7 @@ import {
   requestWakeLock,
   toggleFullscreen,
 } from './screen.js';
-import { formatClock, formatTime, joinDuration, splitDisplay } from './format.js';
+import { formatClock, formatTime, joinDuration, splitDisplay, spokenTime } from './format.js';
 
 const IDLE_MS = 3_000;
 
@@ -131,12 +131,50 @@ function onTick(elapsedMs, running) {
     revealMs: settings.revealMs,
   });
   ui.setBlank(blank);
+  syncSpokenTime(displayMs, countdown, running, tone, blank, displaySeconds);
 
   // Prefix the tab title while running, but put the real one back when idle —
   // overwriting it with a short label would throw away the page title that
   // search results and bookmarks use.
   const title = running ? `${formatTime(displayMs, countdown)} · Fullscreen Timer` : DOCUMENT_TITLE;
   if (title !== document.title) document.title = title;
+}
+
+let lastLabel = '';
+let lastSpokenTone = 'normal';
+let lastSpokenMinute = -1;
+
+/** Screen readers get the time as the digits SVG's label (read on demand, so
+    updated every change — it is not announced), plus a polite announcement
+    once a minute and whenever the amber/red tone kicks in, so colour is never
+    the only signal. A blanked (hidden) timer stays hidden from them too. */
+function syncSpokenTime(displayMs, countdown, running, tone, blank, displaySeconds) {
+  const label = blank ? 'Timer hidden' : `Timer, ${spokenTime(displayMs, countdown)}`;
+  if (label !== lastLabel) {
+    lastLabel = label;
+    el.digits.setAttribute('aria-label', label);
+  }
+
+  if (!running) {
+    lastSpokenTone = 'normal';
+    lastSpokenMinute = -1;
+    return;
+  }
+  if (blank) return;
+
+  const minute = Math.floor(displaySeconds / 60);
+  if (tone !== lastSpokenTone) {
+    lastSpokenTone = tone;
+    if (tone !== 'normal') {
+      ui.announce(`${tone === 'danger' ? 'Almost out of time' : 'Warning'}, ${spokenTime(displayMs, countdown)} left`);
+      lastSpokenMinute = minute;
+      return;
+    }
+  }
+  if (displaySeconds % 60 === 0 && minute !== lastSpokenMinute && displaySeconds > 0) {
+    lastSpokenMinute = minute;
+    ui.announce(spokenTime(displayMs, countdown));
+  }
 }
 
 function handleZero() {

@@ -45,6 +45,19 @@ export function formatTime(ms, roundUp = true) {
   return showHours ? `${hours}:${minutes}:${seconds}` : `${minutes}:${seconds}`;
 }
 
+/** A duration as a screen reader should say it: "1 hour, 2 minutes, 5 seconds". */
+export function spokenTime(ms, roundUp = true) {
+  const totalSeconds = roundUp ? Math.ceil(Math.max(0, ms) / 1000) : Math.floor(Math.max(0, ms) / 1000);
+  const parts = [
+    [Math.floor(totalSeconds / 3600), 'hour'],
+    [Math.floor((totalSeconds % 3600) / 60), 'minute'],
+    [totalSeconds % 60, 'second'],
+  ]
+    .filter(([n]) => n > 0)
+    .map(([n, unit]) => `${n} ${unit}${n === 1 ? '' : 's'}`);
+  return parts.length ? parts.join(', ') : '0 seconds';
+}
+
 /** Local time of day, without seconds. */
 export function formatClock(date = new Date()) {
   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
