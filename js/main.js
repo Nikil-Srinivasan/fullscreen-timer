@@ -24,7 +24,7 @@ import {
   requestWakeLock,
   toggleFullscreen,
 } from './screen.js';
-import { formatClock, formatTime, joinDuration, splitDisplay, spokenTime } from './format.js';
+import { formatClock, formatTime, joinDuration, splitDisplay, splitDuration, spokenTime } from './format.js';
 
 const IDLE_MS = 3_000;
 
@@ -203,6 +203,97 @@ function handleZero() {
   ui.announce('Time is up');
 }
 
+/* --- Typed entry ---------------------------------------------------------
+   Click a digit group and type its number: 1 4 in minutes sets 14 minutes, then
+   moves on to the seconds, and finishing the seconds (or Enter, or clicking
+   away) ends it. Each keystroke applies live through setDuration so the
+   display, ring and settings panel follow along. Escape puts the length back
+   to what it was when typing began. */
+
+const typing = (() => {
+  const input = el.digitsInput;
+  const ORDER = ['hours', 'minutes', 'seconds'];
+  const MAX = { hours: 99, minutes: 59, seconds: 59 };
+  let active = false;
+  let cancelled = false;
+  let original = 0;
+  let base = 0; // the length before the current unit's digits, so each keystroke re-derives from it
+  let hinted = false;
+
+  function withUnit(ms, unit, value) {
+    const fields = splitDuration(ms);
+    fields[unit] = Math.min(MAX[unit], value);
+    return Math.min(MAX_DURATION_MS, Math.max(MIN_DURATION_MS, joinDuration(fields)));
+  }
+
+  /** Keep the timer in view above a touch keyboard, which resizes only the visual viewport. */
+  function fitViewport() {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    el.app.style.height = active ? `${vv.height}px` : '';
+    el.app.style.transform = active && vv.offsetTop ? `translateY(${vv.offsetTop}px)` : '';
+    layoutChrome();
+  }
+
+  function begin() {
+    if (active || clock.running || settings.mode !== 'countdown') return;
+    active = true;
+    cancelled = false;
+    original = settings.durationMs;
+    base = settings.durationMs;
+    input.disabled = false;
+    input.value = '';
+    input.focus({ preventScroll: true });
+    fitViewport();
+    if (!hinted) ui.toast('Type the number · Enter to set · Esc to cancel');
+    hinted = true;
+  }
+
+  function end() {
+    if (!active) return;
+    active = false;
+    if (cancelled) actions.setDuration(original);
+    input.value = '';
+    input.disabled = true;
+    fitViewport();
+  }
+
+  /** Two digits fill a unit; carry on into the next one down, or stop after seconds. */
+  function advance() {
+    const next = ORDER[ORDER.indexOf(selectedUnit) + 1];
+    if (!next) {
+      input.blur();
+      return;
+    }
+    selectedUnit = next;
+    syncSelectedUnit();
+    base = settings.durationMs;
+    input.value = '';
+  }
+
+  input.addEventListener('input', () => {
+    input.value = input.value.replace(/\D/g, '').slice(0, 2);
+    if (input.value) actions.setDuration(withUnit(base, selectedUnit, Number(input.value)));
+    if (input.value.length === 2) advance();
+  });
+
+  input.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') input.blur();
+    else if (event.key === 'Escape') {
+      cancelled = true;
+      input.blur();
+    }
+  });
+
+  input.addEventListener('blur', end);
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', fitViewport);
+    window.visualViewport.addEventListener('scroll', fitViewport);
+  }
+
+  return { begin };
+})();
+
 /* --- Actions ------------------------------------------------------------ */
 
 function syncWakeLock() {
@@ -334,6 +425,7 @@ const actions = {
     selectionVisible = true;
     syncSelectedUnit();
     ui.announce(`Adjusting ${unit}`);
+    typing.begin();
   },
 
   /** Wheel notches or arrow-key presses: `steps` units of whichever is selected. */
@@ -506,6 +598,32 @@ el.stage.addEventListener(
   },
   { passive: false },
 );
+
+/* Swipe up/down on the digits nudges the unit under the finger, like the wheel
+   (up adds time). Touch and pen only — a mouse drag stays a plain click. */
+const SWIPE_STEP = 36;
+let swipe = null;
+
+el.digits.addEventListener('pointerdown', (event) => {
+  if (event.pointerType === 'mouse' || settings.mode !== 'countdown' || clock.running) return;
+  const segment = event.target.closest('[data-unit]');
+  if (segment) actions.selectUnit(segment.dataset.unit);
+  swipe = { id: event.pointerId, y: event.clientY };
+});
+
+el.digits.addEventListener('pointermove', (event) => {
+  if (!swipe || swipe.id !== event.pointerId) return;
+  const steps = Math.trunc((swipe.y - event.clientY) / SWIPE_STEP);
+  if (!steps) return;
+  swipe.y -= steps * SWIPE_STEP;
+  actions.adjustBySelected(steps);
+});
+
+['pointerup', 'pointercancel'].forEach((type) => {
+  el.digits.addEventListener(type, () => {
+    swipe = null;
+  });
+});
 
 document.querySelectorAll('[data-mode]').forEach((node) => {
   node.addEventListener('click', () => actions.setMode(node.dataset.mode));

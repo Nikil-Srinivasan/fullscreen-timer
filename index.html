@@ -134,6 +134,9 @@
             ><tspan id="digit-seconds" class="digits__seg" data-unit="seconds">00</tspan
       ></text>
     </svg>
+    <input class="digits__input" id="digits-input" type="text" inputmode="numeric" pattern="[0-9]*"
+           maxlength="6" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="done"
+           aria-label="Type the number for the selected unit. Enter to set, Escape to cancel." disabled>
     <div class="finish" id="finish" aria-hidden="true" hidden><p class="finish__text">Time's up</p></div>
     <div class="pulse" id="pulse" aria-hidden="true" hidden></div>
     <p class="live" id="live" role="status" aria-live="polite"></p>
@@ -260,8 +263,9 @@
         <div class="keys__row"><dt><kbd>?</kbd></dt><dd>This list</dd></div>
         <div class="keys__row"><dt><kbd>Esc</kbd></dt><dd>Close panels, or leave fullscreen</dd></div>
       </dl>
-      <p class="help__note">Click the hour, minute or second digits to choose which one arrow keys and the
-        scroll wheel change — the click never starts or pauses the clock. Start and pause always go through
+      <p class="help__note">Click the hour, minute or second digits to choose which one arrow keys, the
+        scroll wheel or a swipe change, and to type its number: two digits fill the unit and carry on
+        to the next (<kbd>Enter</kbd> keeps it, <kbd>Esc</kbd> cancels). The click never starts or pauses the clock. Start and pause always go through
         the Start button or <kbd>Space</kbd>. The length can only be changed while paused; pause first if
         the timer is running. While it is hidden, a tap peeks at the time without changing
         anything.</p>

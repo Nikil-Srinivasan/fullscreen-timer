@@ -30,6 +30,7 @@ export const el = {
   digitSeconds: $('digit-seconds'),
   pulse: $('pulse'),
   finish: $('finish'),
+  digitsInput: $('digits-input'),
   live: $('live'),
 
   controls: $('controls'),
@@ -151,6 +152,8 @@ const SEGMENTS = { hours: el.digitHours, minutes: el.digitMinutes, seconds: el.d
 
 /** Highlight whichever digit group the wheel and arrow keys currently adjust. */
 export function setSelectedUnit(unit) {
+  // Swipe is live exactly when a unit is highlighted (see .digits touch-action).
+  el.app.dataset.editing = unit ? 'true' : 'false';
   Object.entries(SEGMENTS).forEach(([name, node]) => {
     node.classList.toggle('digits__seg--selected', name === unit);
   });

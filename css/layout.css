@@ -246,6 +246,27 @@ html:not([data-ready="true"]) .app * {
   opacity: 0;
 }
 
+/* Typed entry: a real (but invisible) input holds focus so phones raise the
+   numeric keyboard; the digits themselves are the display (the selected group
+   is highlighted, as for the wheel and arrow keys). 16px keeps iOS from
+   zooming the page on focus. */
+.digits__input {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  font-size: 16px;
+  pointer-events: none;
+}
+
+.app[data-editing="true"] .digits {
+  touch-action: pan-x pinch-zoom;
+}
+
 /* "Time's up": a countdown that just finished has already reset to 0:00, which
    alone looks the same as never started — so for a few seconds the digits go
    red behind a lightly blurred overlay carrying a large centred label (see
