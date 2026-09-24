@@ -246,6 +246,44 @@ html:not([data-ready="true"]) .app * {
   opacity: 0;
 }
 
+/* "Time's up": a countdown that just finished has already reset to 0:00, which
+   alone looks the same as never started — so for a few seconds the digits go
+   red and flash, with a label (see main.js finishCountdown). */
+.app[data-finished="true"] {
+  --digit: var(--danger);
+  --ring-progress: var(--danger);
+}
+
+.app[data-finished="true"] .digits__text {
+  opacity: 1;
+  animation: finish-flash 0.9s ease-in-out infinite;
+}
+
+.finish {
+  position: absolute;
+  left: 50%;
+  bottom: 0.5rem;
+  z-index: 3;
+  transform: translateX(-50%);
+  padding: 0.35em 1em;
+  border-radius: 999px;
+  background: var(--danger);
+  color: #fff;
+  font-size: clamp(1.1rem, 4vmin, 3rem);
+  font-weight: 700;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+@keyframes finish-flash {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.25; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app[data-finished="true"] .digits__text { animation: none; }
+}
+
 /* A dim breathing dot, so a blank screen still looks alive. */
 .pulse {
   position: absolute;

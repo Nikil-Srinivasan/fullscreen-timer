@@ -29,6 +29,7 @@ export const el = {
   digitMinutes: $('digit-minutes'),
   digitSeconds: $('digit-seconds'),
   pulse: $('pulse'),
+  finish: $('finish'),
   live: $('live'),
 
   controls: $('controls'),
@@ -122,6 +123,11 @@ export function setFullscreenUI(active) {
 export function setBlank(blank) {
   el.app.dataset.blank = blank ? 'true' : 'false';
   el.pulse.hidden = !blank;
+}
+
+export function setFinished(finished) {
+  el.app.dataset.finished = finished ? 'true' : 'false';
+  el.finish.hidden = !finished;
 }
 
 export function setTone(tone) {

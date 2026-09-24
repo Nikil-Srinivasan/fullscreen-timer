@@ -28,6 +28,9 @@ import { formatClock, formatTime, joinDuration, splitDisplay, spokenTime } from 
 
 const IDLE_MS = 3_000;
 
+/** How long the "Time's up" state lingers before settling to the reset 0:00. */
+const FINISH_MS = 6_000;
+
 /** The title as authored in the HTML, restored whenever the clock is idle. */
 const DOCUMENT_TITLE = document.title;
 
@@ -36,6 +39,7 @@ const UNIT_STEP_MS = { hours: 3_600_000, minutes: 60_000, seconds: 1_000 };
 
 let settings = store.load();
 let zeroReached = false;
+let finishTimer = 0;
 let selectedUnit = 'seconds'; // which digit group the wheel and arrow keys adjust
 // Whether that selection should actually be highlighted. Separate from
 // selectedUnit itself so pressing Start can forget the highlight for the
@@ -177,7 +181,16 @@ function syncSpokenTime(displayMs, countdown, running, tone, blank, displaySecon
   }
 }
 
+/** Drop the "Time's up" state — anything the user does next takes over. */
+function endFinish() {
+  clearTimeout(finishTimer);
+  ui.setFinished(false);
+}
+
 function handleZero() {
+  ui.setFinished(true);
+  clearTimeout(finishTimer);
+  finishTimer = setTimeout(endFinish, FINISH_MS);
   if (settings.sound) sound.alarm();
   if (navigator.vibrate) {
     try {
@@ -229,6 +242,7 @@ function finishCountdown() {
 
 const actions = {
   toggleStart() {
+    endFinish();
     // Disabled in the DOM, but Space bypasses that — refuse the same way.
     if (settings.mode === 'countdown' && settings.durationMs === 0) return;
 
@@ -251,6 +265,7 @@ const actions = {
   /** The Reset button/key: clears the clock, and — like a stopwatch clearing to
       zero — clears a countdown's length back to zero too, ready to dial in fresh. */
   reset() {
+    endFinish();
     resetClock();
     if (settings.mode === 'countdown' && settings.durationMs !== 0) {
       store.set({ durationMs: 0 });
@@ -259,6 +274,7 @@ const actions = {
   },
 
   toggleMode() {
+    endFinish();
     const mode = settings.mode === 'countdown' ? 'stopwatch' : 'countdown';
     resetClock();
     store.set({ mode });
@@ -334,6 +350,7 @@ const actions = {
   /** Presets and the duration fields: only while paused, same as adjust(). */
   setDuration(ms) {
     if (clock.running) return;
+    endFinish();
     const patch = { durationMs: ms };
     if (settings.mode !== 'countdown') patch.mode = 'countdown';
     store.set(patch);
@@ -547,6 +564,7 @@ document.getElementById('btn-share').addEventListener('click', async () => {
 
 document.getElementById('btn-defaults').addEventListener('click', () => {
   store.reset();
+  endFinish();
   resetClock();
   ui.toast('Defaults restored');
 });
@@ -628,6 +646,7 @@ onSystemThemeChange(() => {
    fire this event, so anything arriving here came from outside. */
 window.addEventListener('hashchange', () => {
   store.reload();
+  endFinish();
   resetClock();
 });
 
